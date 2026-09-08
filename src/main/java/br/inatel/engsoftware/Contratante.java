@@ -19,10 +19,10 @@ public class Contratante extends Usuario {
         return new ArrayList<>();
     }
     public Avaliacao avaliarUsuario(Usuario avaliado, int nota, String comentario) {
-        if (avaliado == null || avaliado.id == this.id) {
+        if (avaliado == null || avaliado.getId()== this.getId()) {
             return null;
         }
-        Avaliacao avaliacao = new Avaliacao(this.id, avaliado.id, nota, comentario, LocalDate.now());
+        Avaliacao avaliacao = new Avaliacao(0,this.getId(), avaliado.getId(), nota, comentario, LocalDate.now());
         if (!avaliacao.validar()) {
             return null;
         }

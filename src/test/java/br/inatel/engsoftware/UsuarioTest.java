@@ -71,8 +71,28 @@ public class UsuarioTest {
 
     @Test
     void testeAtualizarNotaMedia(){
-        usuario.AtualizarNotaMedia(8.5);
+        usuario.atualizarNotaMedia(4.5);
 
-        Assertions.assertEquals(8.5, usuario.getNotamedia());
+        Assertions.assertEquals(4.5, usuario.getNotamedia());
     }
+
+    @Test
+    void testeAtualizarNotaMediaErro(){
+
+        IllegalArgumentException erro = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            usuario.atualizarNotaMedia(8.5);
+        });
+
+
+        Assertions.assertEquals("A nota média deve estar entre 0 e 5.", erro.getMessage());
+    }
+
+    @Test
+    void testeAtualizarNotaMediaErroNotaNegativa(){
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            usuario.atualizarNotaMedia(-1.0);
+        });
+    }
+
+
 }

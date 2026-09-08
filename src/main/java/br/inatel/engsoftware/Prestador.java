@@ -11,7 +11,6 @@ public class Prestador extends Usuario {
     private double valorHora;
     private final List<String> servicos;
     private final List<Avaliacao> avaliacoesRecebidas;
-    private double notamedia;
 
     public Prestador(int id, String nome, String email, String senha, String telefone,
                      CriptografiaService criptografiaService,
@@ -38,8 +37,6 @@ public class Prestador extends Usuario {
     public double getValorHora() { return valorHora; }
     public void setValorHora(double valorHora) { this.valorHora = valorHora; }
 
-    public double getNotamedia() { return notamedia; }
-
     public List<String> getServicos() { return servicos; }
 
     public void cadastrarServico(String servico) {
@@ -50,7 +47,7 @@ public class Prestador extends Usuario {
 
     public void calcularEAtualizarMedia(){
         if(avaliacoesRecebidas.isEmpty()){
-            super.AtualizarNotaMedia(0.0);
+            super.atualizarNotaMedia(0.0);
             return;
         }
 
@@ -60,7 +57,7 @@ public class Prestador extends Usuario {
             soma += avaliacao.getNota();
         }
 
-       super.AtualizarNotaMedia(soma/avaliacoesRecebidas.size());
+       super.atualizarNotaMedia(soma/avaliacoesRecebidas.size());
 
     }
 
@@ -73,9 +70,13 @@ public class Prestador extends Usuario {
     }
 
     public void receberAvaliacao(Avaliacao avaliacao) {
-        if (avaliacao != null) {
+        // Verifica se não é nula, se passou na validação da própria avaliação e se pertence a este prestador
+        if (avaliacao != null && avaliacao.validar() && avaliacao.getIdAvaliado() == this.getId()) {
             avaliacoesRecebidas.add(avaliacao);
             calcularEAtualizarMedia();
+        } else {
+            // Fail-Fast: Lança erro se alguém tentar injetar uma avaliação inválida ou de outra pessoa
+            throw new IllegalArgumentException("Avaliação inválida ou não pertence a este prestador.");
         }
     }
 
@@ -87,6 +88,5 @@ public class Prestador extends Usuario {
         System.out.println("Cidade: " + cidade);
         System.out.println("Valor/hora: R$ " + valorHora);
         System.out.println("Serviços: " + servicos);
-        System.out.println("Nota meia: " + notamedia);
     }
 }
