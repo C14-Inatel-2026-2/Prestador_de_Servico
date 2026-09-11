@@ -18,6 +18,7 @@ public class Contratante extends Usuario {
     public List<Prestador> buscarPrestador(String termo) {
         return new ArrayList<>();
     }
+
     public Avaliacao avaliarUsuario(Usuario avaliado, int nota, String comentario) {
         if (avaliado == null || avaliado.getId()== this.getId()) {
             return null;
