@@ -2,8 +2,11 @@ package br.inatel.engsoftware;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 
@@ -87,5 +90,42 @@ public class PrestadorTest {
 
         Assertions.assertTrue(prestador.getServicos().contains("Troca de torneira"));
         Assertions.assertEquals(1, prestador.getServicos().size());
+    }
+
+    @Test
+    void testePrestadorRecebeAvaliacaoRuimEMediaEhRecalculada() {
+        Avaliacao boa1 = criarAvaliacaoMock(1, 5);
+        Avaliacao boa2 = criarAvaliacaoMock(1, 5);
+        Avaliacao ruim = criarAvaliacaoMock(1, 1);
+
+        prestador.receberAvaliacao(boa1);
+        prestador.receberAvaliacao(ruim);
+        prestador.receberAvaliacao(boa2);
+
+        Assertions.assertEquals(3, prestador.listarAvaliacoesRecebidas().size());
+        Assertions.assertEquals(11.0 / 3.0, prestador.getNotamedia(), 0.0001);
+        verify(ruim).validar();
+    }
+
+    @Test
+    void testePrestadorCadastraERemoveServicosInvalidos() {
+        Prestador prestadorReal = new Prestador(1, "Mario e Luigi", "SuperMarioBros@email.com", "minhasenhaeh123", "999999999",
+                new BCryptService(), "Encanador", "Consertar canos é o nosso forte!", "Santa Rita", 50.0);
+        prestadorReal.cadastrarServico(null);
+        prestadorReal.cadastrarServico("");
+        prestadorReal.cadastrarServico("   ");
+        prestadorReal.cadastrarServico("Troca de torneira");
+        prestadorReal.cadastrarServico("Troca de torneira");
+        prestadorReal.removerServico("Serviço que nn existe");
+        prestadorReal.removerServico(null);
+        Assertions.assertEquals(List.of("Troca de torneira"), prestadorReal.getServicos());
+    }
+
+    private Avaliacao criarAvaliacaoMock(int idAvaliado, int nota) {
+        Avaliacao avaliacao = Mockito.mock(Avaliacao.class);
+        when(avaliacao.validar()).thenReturn(true);
+        when(avaliacao.getIdAvaliado()).thenReturn(idAvaliado);
+        when(avaliacao.getNota()).thenReturn(nota);
+        return avaliacao;
     }
 }
