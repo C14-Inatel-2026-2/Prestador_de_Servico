@@ -2,7 +2,6 @@ package br.inatel.engsoftware;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -29,16 +28,12 @@ public class ContratanteTest {
 
     @Test
     void testeReceberNotaInvalidaAvaliacao(){
-        criptografiaMock = Mockito.mock(CriptografiaService.class);
-
         Avaliacao notaInvalida = contratante.avaliarUsuario(prestador,-1,"Muito bom");
         Assertions.assertNull(notaInvalida); //como a nota não é valida deve retornar null
     }
 
     @Test
     void testeAvaliarUsuarioComMesmoId(){
-        criptografiaMock = Mockito.mock(CriptografiaService.class);
-
         prestador = new Prestador(2,"Paulo Ricardo Alvez","Paulo@gmail.com","8756985",
                 "95555-5555", criptografiaMock, "Carpinteiro","Faço carpintaria a mais de 25 anos, sou o senhor responsavel e trabalhador, caso precisem dos meus serviços estou a disposição!",
                 "Cachoeira de Minas",34.8);
