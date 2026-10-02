@@ -55,6 +55,22 @@ public class ContratanteTest {
         verify(prestadorMock, never()).receberAvaliacao(any()); //prestador não recebe a avaliação
     }
 
+    @Test
+    void testeContratanteAvaliaUsuarioCorretamente(){
+        Prestador prestadorMock = Mockito.mock(Prestador.class); when(prestadorMock.getId()).thenReturn(8);
+        Avaliacao avaliacao = contratante.avaliarUsuario(prestadorMock, 5, "Cliente satisfeito e serviço realizado sem problemas.");
+
+        Assertions.assertNotNull(avaliacao);
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(2, avaliacao.getIdAutor()),
+                () -> Assertions.assertEquals(8, avaliacao.getIdAvaliado()),
+                () -> Assertions.assertEquals(5, avaliacao.getNota()),
+                () -> Assertions.assertEquals("Cliente satisfeito e serviço realizado sem problemas.", avaliacao.getComentario()),
+                () -> Assertions.assertNotNull(avaliacao.getData())
+        );
+
+    }
+
 
     @Test
     void testeContratanteVingativoDaNotaMinimaSemComentario() { //teste sem mock: objetos reais e um fake simples no lugar do BCrypt
