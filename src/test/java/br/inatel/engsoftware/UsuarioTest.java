@@ -94,5 +94,26 @@ public class UsuarioTest {
         });
     }
 
+    @Test
+    void testeLoginEmailIncorretoComSenhaCorreta(){
+        when(criptografiaMock.verificarSenha("senha123", "hashFalso123")).thenReturn(true);
+
+        boolean resultado = usuario.login("outro@inatel.br", "senha123");
+
+        Assertions.assertFalse(resultado);
+    }
+
+    @Test
+    void testeAposAlterarSenhaSoANovaSenhaFazLogin(){
+        when(criptografiaMock.verificarSenha("senha123", "hashFalso123")).thenReturn(true);
+        when(criptografiaMock.gerarHash("novaSenha456")).thenReturn("novoHash456");
+        when(criptografiaMock.verificarSenha("novaSenha456", "novoHash456")).thenReturn(true);
+
+        usuario.alterarSenha("senha123", "novaSenha456");
+
+        Assertions.assertTrue(usuario.login("gabriel@inatel.br", "novaSenha456"));
+        Assertions.assertFalse(usuario.login("gabriel@inatel.br", "senha123"));
+    }
+
 
 }

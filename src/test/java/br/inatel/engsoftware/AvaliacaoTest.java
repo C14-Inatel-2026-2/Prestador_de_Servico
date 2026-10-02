@@ -57,4 +57,12 @@ public class AvaliacaoTest {
 
         Assertions.assertEquals("[2026-09-03] Nota 3/5 - sem comentario", avaliacao.formatar());
     }
+
+    @Test
+    void testeValidarAceitaNotaMinima() {
+        Avaliacao avaliacao = new Avaliacao(17, 1, 2, 1, "Ruim", LocalDate.now());
+
+        Assertions.assertTrue(avaliacao.validar());
+    }
+
 }
