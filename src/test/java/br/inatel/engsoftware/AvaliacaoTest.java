@@ -65,4 +65,12 @@ public class AvaliacaoTest {
         Assertions.assertTrue(avaliacao.validar());
     }
 
+    @Test
+    void testeFormatarComComentarioNulo() {
+        LocalDate data = LocalDate.of(2026, 9, 3);
+        Avaliacao avaliacao = new Avaliacao(18, 1, 2, 3, null, data);
+
+        Assertions.assertEquals("[2026-09-03] Nota 3/5 - sem comentario", avaliacao.formatar());
+    }
+
 }
