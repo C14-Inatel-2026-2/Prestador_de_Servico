@@ -2,7 +2,6 @@ package br.inatel.engsoftware;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -119,6 +118,19 @@ public class PrestadorTest {
         prestadorReal.removerServico("Serviço que nn existe");
         prestadorReal.removerServico(null);
         Assertions.assertEquals(List.of("Troca de torneira"), prestadorReal.getServicos());
+    }
+
+    @Test
+    void testeRemoverServicoExistenteManterOsOutrosServicos() {
+        Prestador prestadorReal = new Prestador(3, "José", "jose@email.com", "arrumando6789", "999999999",
+                new BCryptService(), "Encanador", "Consertos em geral", "Santa Rita", 65.0);
+        prestadorReal.cadastrarServico("Troca de valvula de descarga");
+        prestadorReal.cadastrarServico("Troca de torneira");
+        prestadorReal.cadastrarServico("Troca de sifão");
+        prestadorReal.cadastrarServico("Desentupimento");
+        prestadorReal.removerServico("Troca de torneira");
+        prestadorReal.removerServico("Troca de valvula de descarga");
+        Assertions.assertEquals(List.of("Troca de sifão","Desentupimento"), prestadorReal.getServicos());
     }
 
     private Avaliacao criarAvaliacaoMock(int idAvaliado, int nota) {
