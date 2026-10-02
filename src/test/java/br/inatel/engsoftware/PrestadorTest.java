@@ -128,4 +128,15 @@ public class PrestadorTest {
         when(avaliacao.getNota()).thenReturn(nota);
         return avaliacao;
     }
+
+    @Test
+    void testeAvaliacaoNulaEhRejeitadaENaoAlteraMedia() {
+        prestador.receberAvaliacao(criarAvaliacaoMock(1, 4));
+
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> prestador.receberAvaliacao(null));
+
+        Assertions.assertEquals(1, prestador.listarAvaliacoesRecebidas().size());
+        Assertions.assertEquals(4.0, prestador.getNotamedia());
+    }
 }
