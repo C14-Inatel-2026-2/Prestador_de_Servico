@@ -5,6 +5,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 import static org.mockito.Mockito.*;
 
 public class ContratanteTest {
@@ -18,12 +21,58 @@ public class ContratanteTest {
         when(criptografiaMock.gerarHash(anyString())).thenReturn("hashFalso");
 
 
-        prestador = new Prestador(8,"Paulo Ricardo Alvez","Paulo@gmail.com","8756985",
-                "95555-5555", criptografiaMock, "Carpinteiro","Faço carpintaria a mais de 25 anos, sou o senhor responsavel e trabalhador, caso precisem dos meus serviços estou a disposição!",
+        prestador = new Prestador(8,"Paulo Ricardo Alvez",
+                "Paulo@gmail.com","8756985",
+                "95555-5555", criptografiaMock, "Carpinteiro",
+                "Faço carpintaria a mais de 25 anos, sou o senhor responsavel e trabalhador, caso precisem dos meus serviços estou a disposição!",
                 "Cachoeira de Minas",34.8);
 
-        contratante = new Contratante(2,"Roberto Carlos da Siva","roberto@gmail.com","1234567",
-                "98888-8888",criptografiaMock,"Santa Rita do Sapucai");
+        contratante = new Contratante(2,"Roberto Carlos da Siva",
+                "roberto@gmail.com","1234567",
+                "98888-8888",criptografiaMock,
+                "Santa Rita do Sapucai");
+    }
+
+    @Test
+    void testeAvaliarUsuarioNuloRetornaNull(){
+        Avaliacao resultado = contratante.avaliarUsuario(null,5,
+                "Muito bom");
+        Assertions.assertNull(resultado);
+    }
+
+    @Test
+    void testeGetterCidade(){
+        contratante.setCidade("Varginha");
+        Assertions.assertEquals("Varginha",contratante.getCidade());
+    }
+
+    @Test
+    void testeBuscarPrestadorRetornaListaVazia(){
+        Assertions.assertTrue(contratante.buscarPrestador("Encanador").isEmpty());
+    }
+
+    @Test
+    void testeListarMinhasAvaliacoesRetornaListaVazia(){
+        Assertions.assertTrue(contratante.listarMinhasAvaliacoes().isEmpty());
+    }
+
+    @Test
+    void testeExibirPerfil(){
+        ByteArrayOutputStream saida = new ByteArrayOutputStream();
+        PrintStream original = System.out;
+        System.setOut(new PrintStream(saida));
+
+        try {
+            contratante.exibirPerfil();
+        } finally {
+            System.setOut(original);
+        }
+
+        String texto = saida.toString();
+
+        Assertions.assertTrue(texto.contains("Email: roberto@gmail.com"));
+        Assertions.assertTrue(texto.contains("Cidade: Santa Rita do Sapucai"));
+
     }
 
     @Test
@@ -34,8 +83,10 @@ public class ContratanteTest {
 
     @Test
     void testeAvaliarUsuarioComMesmoId(){
-        prestador = new Prestador(2,"Paulo Ricardo Alvez","Paulo@gmail.com","8756985",
-                "95555-5555", criptografiaMock, "Carpinteiro","Faço carpintaria a mais de 25 anos, sou o senhor responsavel e trabalhador, caso precisem dos meus serviços estou a disposição!",
+        prestador = new Prestador(2,"Paulo Ricardo Alvez",
+                "Paulo@gmail.com","8756985",
+                "95555-5555", criptografiaMock, "Carpinteiro",
+                "Faço carpintaria a mais de 25 anos, sou o senhor responsavel e trabalhador, caso precisem dos meus serviços estou a disposição!",
                 "Cachoeira de Minas",34.8);
 
         contratante = new Contratante(2,"Roberto Carlos da Siva","roberto@gmail.com","1234567",
@@ -49,7 +100,8 @@ public class ContratanteTest {
         Prestador prestadorMock = Mockito.mock(Prestador.class);
         when(prestadorMock.getId()).thenReturn(8);
 
-        Avaliacao resultado = contratante.avaliarUsuario(prestadorMock, 1000, "Nota mil!!! ;)");
+        Avaliacao resultado = contratante.avaliarUsuario(prestadorMock, 1000,
+                "Nota mil!!! ;)");
 
         Assertions.assertNull(resultado);
         verify(prestadorMock, never()).receberAvaliacao(any()); //prestador não recebe a avaliação

@@ -8,9 +8,27 @@ import java.time.LocalDate;
 public class AvaliacaoTest {
 
     @Test
+    void testeGettersSetters(){
+
+            LocalDate data  = LocalDate.of(2026,9,3);
+            Avaliacao avaliacao = new Avaliacao(10, 1, 2, 5,
+                    "Serviço excelente!",
+                    data);
+
+            Assertions.assertEquals(10, avaliacao.getId());
+            Assertions.assertEquals(1,avaliacao.getIdAutor());
+            Assertions.assertEquals(2,avaliacao.getIdAvaliado());
+            Assertions.assertEquals(5,avaliacao.getNota());
+            Assertions.assertEquals("Serviço excelente!",avaliacao.getComentario());
+            Assertions.assertEquals(data,avaliacao.getData());
+    }
+
+    @Test
     void testeValidarAvaliacaoCorreta() {
         // 6 parâmetros: id (10), Autor (1), Avaliado (2), Nota (5), Comentário, Data
-        Avaliacao avaliacao = new Avaliacao(10, 1, 2, 5, "Serviço excelente!", LocalDate.now());
+        Avaliacao avaliacao = new Avaliacao(10, 1, 2, 5,
+                "Serviço excelente!",
+                LocalDate.now());
 
         Assertions.assertTrue(avaliacao.validar());
     }
