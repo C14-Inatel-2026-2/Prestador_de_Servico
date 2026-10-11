@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -20,14 +22,69 @@ public class PrestadorTest {
         when(criptografiaMock.gerarHash(anyString())).thenReturn("hashFalso");
 
 
-        prestador = new Prestador(1, "João", "joao@email.com", "senha123", "999999999",
-                criptografiaMock, "Encanador", "Consertos em geral", "Santa Rita", 50.0);
+        prestador = new Prestador(1, "João",
+                "joao@email.com",
+                "senha123",
+                "999999999",
+                criptografiaMock,
+                "Encanador",
+                "Consertos em geral",
+                "Santa Rita",
+                50.0);
+    }
+
+    @Test
+    void testeSettersEGetters() {
+        prestador.setNome("Pedro Alves");
+        prestador.setEmail("pedro@email.com");
+        prestador.setTelefone("35966660000");
+        prestador.setProfissao("Eletricista");
+        prestador.setDescricao("Reparos hidraulicos");
+        prestador.setCidade("Varginha");
+        prestador.setValorHora(95.5);
+
+        Assertions.assertEquals("Pedro Alves", prestador.getNome());
+        Assertions.assertEquals("pedro@email.com", prestador.getEmail());
+        Assertions.assertEquals("35966660000", prestador.getTelefone());
+        Assertions.assertEquals("Eletricista", prestador.getProfissao());
+        Assertions.assertEquals("Reparos hidraulicos", prestador.getDescricao());
+        Assertions.assertEquals("Varginha", prestador.getCidade());
+        Assertions.assertEquals(95.5, prestador.getValorHora(), 0.001);
+    }
+
+    @Test
+    void testeExibirPerfilPrestador() {
+        prestador.cadastrarServico("Instalacao eletrica");
+        ByteArrayOutputStream saida = new ByteArrayOutputStream();
+        PrintStream original = System.out;
+        System.setOut(new PrintStream(saida));
+
+        try {
+            prestador.exibirPerfil();
+        } finally {
+            System.setOut(original);
+        }
+
+        String texto = saida.toString();
+
+        Assertions.assertTrue(texto.contains("Email: joao@email.com"));
+        Assertions.assertTrue(texto.contains("Encanador"));
+        Assertions.assertTrue(texto.contains("Consertos em geral"));
+        Assertions.assertTrue(texto.contains("Cidade: Santa Rita"));
+        Assertions.assertTrue(texto.contains("Valor/hora: R$ 50.0"));
+        Assertions.assertTrue(texto.contains("Instalacao eletrica"));
     }
 
     @Test
     void testePrestadorNovoTemMediaZero() {
         prestador.calcularEAtualizarMedia();
         Assertions.assertEquals(0.0, prestador.getNotamedia());
+    }
+
+    @Test
+    void setetrsgettersTest(){
+        prestador.setProfissao("Eletricista");
+
     }
 
     @Test
