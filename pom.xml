@@ -70,8 +70,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.4</version>
                 <configuration>
-                    <!-- Garante que o Surefire injete a configuração do JaCoCo corretamente -->
-
                     <jvm>${java.home}/bin/java.exe</jvm>
                     <argLine>@{argLine}</argLine>
                 </configuration>

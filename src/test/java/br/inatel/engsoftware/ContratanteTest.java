@@ -78,7 +78,7 @@ public class ContratanteTest {
     @Test
     void testeReceberNotaInvalidaAvaliacao(){
         Avaliacao notaInvalida = contratante.avaliarUsuario(prestador,-1,"Muito bom");
-        Assertions.assertNull(notaInvalida); //como a nota não é valida deve retornar null
+        Assertions.assertNull(notaInvalida);
     }
 
     @Test
@@ -93,10 +93,10 @@ public class ContratanteTest {
                 "98888-8888",criptografiaMock,"Santa Rita do Sapucai");
 
         Avaliacao idIgual = contratante.avaliarUsuario(prestador,5,"Muito bom");
-        Assertions.assertNull(idIgual); //como estou colocando o id do avaliador igual o id de quem ele esta avaliando
+        Assertions.assertNull(idIgual);
     }
     @Test
-    void testeContratanteComNotaAbsurdaNaoGeraAvaliacao() { //teste onde uma nota absurda é dada obs: teste negativo
+    void testeContratanteComNotaAbsurdaNaoGeraAvaliacao() {
         Prestador prestadorMock = Mockito.mock(Prestador.class);
         when(prestadorMock.getId()).thenReturn(8);
 
@@ -104,7 +104,7 @@ public class ContratanteTest {
                 "Nota mil!!! ;)");
 
         Assertions.assertNull(resultado);
-        verify(prestadorMock, never()).receberAvaliacao(any()); //prestador não recebe a avaliação
+        verify(prestadorMock, never()).receberAvaliacao(any());
     }
 
     @Test
@@ -125,7 +125,7 @@ public class ContratanteTest {
 
 
     @Test
-    void testeContratanteVingativoDaNotaMinimaSemComentario() { //teste sem mock: objetos reais e um fake simples no lugar do BCrypt
+    void testeContratanteVingativoDaNotaMinimaSemComentario() {
         CriptografiaService fake = new CriptografiaFake();
         Contratante contratanteReal = new Contratante(2, "Browser", "browser@gmail.com", "amoprincesapeach",
                 "98888-8888", fake, "Santa Rita do Sapucai");
@@ -135,7 +135,7 @@ public class ContratanteTest {
         Avaliacao avaliacao = contratanteReal.avaliarUsuario(prestadorReal, 1, "   ");
 
         Assertions.assertNotNull(avaliacao);
-        Assertions.assertAll( //executa todas as verificações da avaliação devolvida pelo contratante
+        Assertions.assertAll(
                 () -> Assertions.assertEquals(2, avaliacao.getIdAutor()),
                 () -> Assertions.assertEquals(8, avaliacao.getIdAvaliado()),
                 () -> Assertions.assertEquals(1, avaliacao.getNota()),
