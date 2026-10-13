@@ -5,6 +5,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -25,7 +30,43 @@ public class UsuarioTest {
 
         when(criptografiaMock.gerarHash("senha123")).thenReturn("hashFalso123");
 
-        usuario = new Usuariobase(1,"Gabriel", "gabriel@inatel.br", "senha123", "999999999", criptografiaMock);
+        usuario = new Usuariobase(1,
+                "Gabriel",
+                "gabriel@inatel.br",
+                "senha123",
+                "999999999", criptografiaMock);
+    }
+
+    @Test
+    void testeMudandoDadosPerfil(){
+        usuario.setNome("João");
+        usuario.setEmail("joão@gmail.com");
+        usuario.setTelefone("999999999");
+
+        Assertions.assertEquals("João", usuario.getNome());
+        Assertions.assertEquals("joão@gmail.com", usuario.getEmail());
+        Assertions.assertEquals("999999999",usuario.getTelefone());
+    }
+
+    @Test
+    void testeExibirPerfil(){
+        ByteArrayOutputStream saida = new ByteArrayOutputStream();
+        PrintStream original = System.out;
+        System.setOut(new PrintStream(saida));
+        try {
+            usuario.exibirPerfil();
+        } finally {
+            System.setOut(original);
+        }
+
+        String texto = saida.toString();
+
+        Assertions.assertNotNull(texto);
+        Assertions.assertTrue(texto.contains("ID: 1"));
+        Assertions.assertTrue(texto.contains("Nome: Gabriel"));
+        Assertions.assertTrue(texto.contains("Email: gabriel@inatel.br"));
+        Assertions.assertTrue(texto.contains("Telefone: 999999999"));
+        Assertions.assertTrue(texto.contains("Nota: 0.0"));
     }
 
     @Test

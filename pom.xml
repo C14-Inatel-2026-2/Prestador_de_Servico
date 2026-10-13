@@ -41,8 +41,42 @@
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
-
-
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Plugin do JaCoCo com a versão 0.8.15 que você buscou -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.15</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+                <configuration>
+                    <jvm>${java.home}/bin/java.exe</jvm>
+                    <argLine>@{argLine}</argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+
 
 </project>

@@ -5,6 +5,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 import static org.mockito.Mockito.*;
 
 public class ContratanteTest {
@@ -18,41 +21,90 @@ public class ContratanteTest {
         when(criptografiaMock.gerarHash(anyString())).thenReturn("hashFalso");
 
 
-        prestador = new Prestador(8,"Paulo Ricardo Alvez","Paulo@gmail.com","8756985",
-                "95555-5555", criptografiaMock, "Carpinteiro","Faço carpintaria a mais de 25 anos, sou o senhor responsavel e trabalhador, caso precisem dos meus serviços estou a disposição!",
+        prestador = new Prestador(8,"Paulo Ricardo Alvez",
+                "Paulo@gmail.com","8756985",
+                "95555-5555", criptografiaMock, "Carpinteiro",
+                "Faço carpintaria a mais de 25 anos, sou o senhor responsavel e trabalhador, caso precisem dos meus serviços estou a disposição!",
                 "Cachoeira de Minas",34.8);
 
-        contratante = new Contratante(2,"Roberto Carlos da Siva","roberto@gmail.com","1234567",
-                "98888-8888",criptografiaMock,"Santa Rita do Sapucai");
+        contratante = new Contratante(2,"Roberto Carlos da Siva",
+                "roberto@gmail.com","1234567",
+                "98888-8888",criptografiaMock,
+                "Santa Rita do Sapucai");
+    }
+
+    @Test
+    void testeAvaliarUsuarioNuloRetornaNull(){
+        Avaliacao resultado = contratante.avaliarUsuario(null,5,
+                "Muito bom");
+        Assertions.assertNull(resultado);
+    }
+
+    @Test
+    void testeGetterCidade(){
+        contratante.setCidade("Varginha");
+        Assertions.assertEquals("Varginha",contratante.getCidade());
+    }
+
+    @Test
+    void testeBuscarPrestadorRetornaListaVazia(){
+        Assertions.assertTrue(contratante.buscarPrestador("Encanador").isEmpty());
+    }
+
+    @Test
+    void testeListarMinhasAvaliacoesRetornaListaVazia(){
+        Assertions.assertTrue(contratante.listarMinhasAvaliacoes().isEmpty());
+    }
+
+    @Test
+    void testeExibirPerfil(){
+        ByteArrayOutputStream saida = new ByteArrayOutputStream();
+        PrintStream original = System.out;
+        System.setOut(new PrintStream(saida));
+
+        try {
+            contratante.exibirPerfil();
+        } finally {
+            System.setOut(original);
+        }
+
+        String texto = saida.toString();
+
+        Assertions.assertTrue(texto.contains("Email: roberto@gmail.com"));
+        Assertions.assertTrue(texto.contains("Cidade: Santa Rita do Sapucai"));
+
     }
 
     @Test
     void testeReceberNotaInvalidaAvaliacao(){
         Avaliacao notaInvalida = contratante.avaliarUsuario(prestador,-1,"Muito bom");
-        Assertions.assertNull(notaInvalida); //como a nota não é valida deve retornar null
+        Assertions.assertNull(notaInvalida);
     }
 
     @Test
     void testeAvaliarUsuarioComMesmoId(){
-        prestador = new Prestador(2,"Paulo Ricardo Alvez","Paulo@gmail.com","8756985",
-                "95555-5555", criptografiaMock, "Carpinteiro","Faço carpintaria a mais de 25 anos, sou o senhor responsavel e trabalhador, caso precisem dos meus serviços estou a disposição!",
+        prestador = new Prestador(2,"Paulo Ricardo Alvez",
+                "Paulo@gmail.com","8756985",
+                "95555-5555", criptografiaMock, "Carpinteiro",
+                "Faço carpintaria a mais de 25 anos, sou o senhor responsavel e trabalhador, caso precisem dos meus serviços estou a disposição!",
                 "Cachoeira de Minas",34.8);
 
         contratante = new Contratante(2,"Roberto Carlos da Siva","roberto@gmail.com","1234567",
                 "98888-8888",criptografiaMock,"Santa Rita do Sapucai");
 
         Avaliacao idIgual = contratante.avaliarUsuario(prestador,5,"Muito bom");
-        Assertions.assertNull(idIgual); //como estou colocando o id do avaliador igual o id de quem ele esta avaliando
+        Assertions.assertNull(idIgual);
     }
     @Test
-    void testeContratanteComNotaAbsurdaNaoGeraAvaliacao() { //teste onde uma nota absurda é dada obs: teste negativo
+    void testeContratanteComNotaAbsurdaNaoGeraAvaliacao() {
         Prestador prestadorMock = Mockito.mock(Prestador.class);
         when(prestadorMock.getId()).thenReturn(8);
 
-        Avaliacao resultado = contratante.avaliarUsuario(prestadorMock, 1000, "Nota mil!!! ;)");
+        Avaliacao resultado = contratante.avaliarUsuario(prestadorMock, 1000,
+                "Nota mil!!! ;)");
 
         Assertions.assertNull(resultado);
-        verify(prestadorMock, never()).receberAvaliacao(any()); //prestador não recebe a avaliação
+        verify(prestadorMock, never()).receberAvaliacao(any());
     }
 
     @Test
@@ -73,7 +125,7 @@ public class ContratanteTest {
 
 
     @Test
-    void testeContratanteVingativoDaNotaMinimaSemComentario() { //teste sem mock: objetos reais e um fake simples no lugar do BCrypt
+    void testeContratanteVingativoDaNotaMinimaSemComentario() {
         CriptografiaService fake = new CriptografiaFake();
         Contratante contratanteReal = new Contratante(2, "Browser", "browser@gmail.com", "amoprincesapeach",
                 "98888-8888", fake, "Santa Rita do Sapucai");
@@ -83,7 +135,7 @@ public class ContratanteTest {
         Avaliacao avaliacao = contratanteReal.avaliarUsuario(prestadorReal, 1, "   ");
 
         Assertions.assertNotNull(avaliacao);
-        Assertions.assertAll( //executa todas as verificações da avaliação devolvida pelo contratante
+        Assertions.assertAll(
                 () -> Assertions.assertEquals(2, avaliacao.getIdAutor()),
                 () -> Assertions.assertEquals(8, avaliacao.getIdAvaliado()),
                 () -> Assertions.assertEquals(1, avaliacao.getNota()),
