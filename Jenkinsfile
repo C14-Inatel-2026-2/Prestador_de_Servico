@@ -13,9 +13,42 @@ pipeline {
                 }
             }
         }
+
+        stage('Test') {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh 'mvn -B verify'
+                    } else {
+                        bat 'mvn -B verify'
+                    }
+                }
+            }
+        }
     }
+
     post {
-        success { echo 'Build OK' }
-        failure { echo 'Build falhou' }
-    }
+        always {
+             junit(
+                 testResults: 'target/surefire-reports/TEST-*.xml',
+                 allowEmptyResults: true
+             )
+
+             archiveArtifacts(
+                 artifacts: 'target/site/jacoco/**',
+                 allowEmptyArchive: true
+             )
+
+             echo 'Publicacao dos resultados finalizada.'
+         }
+
+         success {
+             echo 'Build e testes executados com sucesso!'
+         }
+
+         failure {
+             echo 'Build ou testes falharam. Confira os relatorios.'
+         }
+     }
 }
+
