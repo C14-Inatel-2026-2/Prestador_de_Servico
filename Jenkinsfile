@@ -29,26 +29,34 @@ pipeline {
 
     post {
         always {
-             junit(
-                 testResults: 'target/surefire-reports/TEST-*.xml',
-                 allowEmptyResults: true
-             )
+            // Publica os resultados dos testes JUnit
+            junit(
+                testResults: 'target/surefire-reports/TEST-*.xml',
+                allowEmptyResults: true
+            )
 
-             archiveArtifacts(
-                 artifacts: 'target/site/jacoco/**',
-                 allowEmptyArchive: true
-             )
+            // Publica a cobertura de código do JaCoCo
+            recordCoverage(
+                tools: [[
+                    parser: 'JACOCO',
+                    pattern: 'target/site/jacoco/jacoco.xml'
+                ]]
+            )
 
-             echo 'Publicacao dos resultados finalizada.'
-         }
+            // Mantém os arquivos HTML e XML disponíveis
+            archiveArtifacts(
+                artifacts: 'target/site/jacoco/**',
+                allowEmptyArchive: true
+            )
+        }
 
-         success {
-             echo 'Build e testes executados com sucesso!'
-         }
+        success {
+            echo 'Build e testes executados com sucesso!'
+        }
 
-         failure {
-             echo 'Build ou testes falharam. Confira os relatorios.'
-         }
-     }
+        failure {
+            echo 'Build ou testes falharam. Confira os relatórios.'
+        }
+    }
 }
 
