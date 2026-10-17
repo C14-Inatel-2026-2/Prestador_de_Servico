@@ -1,6 +1,6 @@
-# Pipeline de Build com Jenkins
+# Pipeline de CI/CD com Jenkins
 
-Este guia explica como instalar o Jenkins no Windows e rodar a pipeline de build do projeto na sua própria máquina. A pipeline está definida no arquivo `Jenkinsfile`, na raiz do repositório.
+Este guia explica como instalar o Jenkins no Windows e rodar a pipeline de CI/CD do projeto na sua própria máquina. A pipeline está definida no arquivo `Jenkinsfile`, na raiz do repositório.
 
 ## O que a pipeline faz
 
@@ -9,7 +9,12 @@ Para cada branch que tem um `Jenkinsfile`, o Jenkins:
 1. Baixa o código do GitHub (**Checkout SCM**).
 2. Instala o Maven configurado como `Maven3` (**Tool Install**).
 3. Compila e empacota o projeto com `mvn -B clean package -DskipTests` (**Build**).
-4. Imprime `Build OK` ou `Build falhou` (**Post Actions**).
+4. Roda os testes e gera os relatórios de testes e de cobertura com `mvn -B verify` (**Test**).
+5. Reprova o build se a cobertura de linhas ficar abaixo de 70% com `mvn -B jacoco:check` (**Cobertura**).
+6. Implanta o `.jar` aprovado no ambiente de execução e roda um smoke test (**Deploy**).
+7. Publica os resultados dos testes, a cobertura e o relatório HTML do JaCoCo, mesmo se algum stage falhar (**Post Actions**).
+
+Cada stage só roda se o anterior passou. Ou seja, o Deploy só acontece se o build, os testes e a cobertura estiverem aprovados.
 
 Não é necessário Docker nem conta no site do Jenkins. Tudo roda localmente em `http://localhost:8080`.
 
@@ -62,39 +67,47 @@ Não é necessário Docker nem conta no site do Jenkins. Tudo roda localmente em
 
 Isso é feito no Jenkins (navegador), não no IntelliJ. O Maven embutido do IntelliJ não é visto pelo Jenkins.
 
-## 5. Visual de stages (opcional)
+## 5. Plugins
 
-O plugin **Pipeline Graph View** mostra o gráfico de stages, parecido com o GitHub Actions. Ele costuma vir junto com as extensões sugeridas. Para conferir, vá em **Gerenciar Jenkins > Plugins > Installed plugins**.
+Confira em **Gerenciar Jenkins > Plugins > Installed plugins**. O que faltar, instale em **Available plugins**.
+
+| Plugin | Obrigatório? | Para que serve |
+|---|---|---|
+| **JUnit** | Sim | Passo `junit` do `Jenkinsfile`: mostra o resultado dos testes no build. |
+| **Coverage** | Sim | Passo `recordCoverage` do `Jenkinsfile`: mostra a cobertura do JaCoCo no build. Não vem nas extensões sugeridas. |
+| **Pipeline Graph View** | Não | Mostra o gráfico de stages, parecido com o GitHub Actions. Costuma vir nas extensões sugeridas. |
+
+Sem os plugins obrigatórios, o build termina com erro do tipo `No such DSL method`.
 
 ## 6. O `Jenkinsfile`
 
-O arquivo está na raiz do repositório:
+O arquivo está na raiz do repositório e tem estes stages:
 
-```groovy
-pipeline {
-    agent any
-    tools { maven 'Maven3' }
-    stages {
-        stage('Build') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        sh 'mvn -B clean package -DskipTests'
-                    } else {
-                        bat 'mvn -B clean package -DskipTests'
-                    }
-                }
-            }
-        }
-    }
-    post {
-        success { echo 'Build OK' }
-        failure { echo 'Build falhou' }
-    }
-}
-```
+| Stage | Comando | Falha quando |
+|---|---|---|
+| Build | `mvn -B clean package -DskipTests` | O código não compila. |
+| Test | `mvn -B verify` | Algum teste falha. |
+| Cobertura | `mvn -B jacoco:check` | A cobertura de linhas fica abaixo de 70% (regra no `pom.xml`). |
+| Deploy | cópia do `.jar` + `java -jar` | O `.jar` não é copiado ou não executa. |
 
 Alterações no `Jenkinsfile` devem ser feitas por pull request, para ninguém quebrar o arquivo que todo o grupo usa.
+
+### Deploy
+
+A aplicação ainda é de console e não tem servidor, então o ambiente de execução é simulado por uma pasta fora do workspace, na máquina do Jenkins:
+
+- Windows: `C:\ProgramData\Jenkins\.jenkins\deploy\prestador-de-servicos\prestador-de-servicos.jar`
+- Linux/Mac: `$JENKINS_HOME/deploy/prestador-de-servicos/prestador-de-servicos.jar`
+
+O stage copia para essa pasta o `.jar` que passou nos testes e na cobertura e roda `java -jar` nele como smoke test. Se o `.jar` implantado não executar, o build fica vermelho. A pasta é a mesma para todas as branches, então ela sempre guarda o último build aprovado.
+
+Para o `java -jar` funcionar, o `pom.xml` define a classe principal (`br.inatel.engsoftware.Main`) no manifesto do jar, pelo `maven-jar-plugin`.
+
+Para conferir o deploy: abra o **Console Output** do build e procure a mensagem `Build #N implantado em ...`. Ou rode o `.jar` implantado direto no terminal:
+
+```
+java -jar "C:\ProgramData\Jenkins\.jenkins\deploy\prestador-de-servicos\prestador-de-servicos.jar"
+```
 
 ## 7. Criar o job no Jenkins
 
@@ -172,25 +185,14 @@ O gráfico de stages e o **Console Output** funcionam igual aos do Multibranch. 
 | A `main` não aparece no Jenkins | O `Jenkinsfile` ainda não chegou na `main`. Depois do merge do PR, clique em **Scan Repository Now**. |
 | Porta 8080 em uso | Troque a porta no instalador (por exemplo, 8081) ou feche o programa que está usando. |
 | Novos pushes não disparam build sozinhos | O Jenkins roda em `localhost` e o GitHub não consegue avisá-lo. Use o scan periódico ou **Scan Repository Now**. |
+| `No such DSL method 'recordCoverage'` ou `'junit'` | Falta o plugin **Coverage** ou **JUnit**. Veja a seção 5. |
+| Stage Deploy falha com `'java' não é reconhecido` | O serviço do Jenkins não enxerga o Java no PATH. Reinicie o serviço do Jenkins ou troque `java` por `"%JAVA_HOME%\bin\java"` no stage Deploy. |
+| Stage Deploy falha com `no main manifest attribute` | O `pom.xml` da sua branch está sem a configuração do `maven-jar-plugin`. Traga a `main` para a sua branch com `git merge main`. |
 
 ## Próximos passos
 
 Aviso para o próximo membro que for mexer na pipeline:
 
-- **Rodar os testes na pipeline.** Hoje o stage Build usa `-DskipTests` de propósito: a pipeline valida só a compilação e o empacotamento. Quem for incluir os testes deve criar um `stage('Test')` depois do Build, com `mvn -B test` (e, se quiser, publicar o relatório do JaCoCo). O `-DskipTests` pode continuar no Build, já que os testes passam a rodar no stage separado.
-
-```groovy
-stage('Test') {
-    steps {
-        script {
-            if (isUnix()) {
-                sh 'mvn -B test'
-            } else {
-                bat 'mvn -B test'
-            }
-        }
-    }
-}
-```
+- **Deploy externo.** Hoje o Deploy é local. Quando houver um servidor ou uma interface, troque só o stage Deploy (por exemplo, publicando o `.jar` no GitHub Releases ou em um servidor). Os outros stages continuam iguais.
 
 - **Manter esta documentação atualizada.** Sempre que o `Jenkinsfile` ou o processo de configuração mudar (novo stage, nova versão do Java, mudança no job), atualize este arquivo no mesmo pull request.
