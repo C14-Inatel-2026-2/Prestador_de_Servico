@@ -88,6 +88,19 @@
                     <argLine>@{argLine}</argLine>
                 </configuration>
             </plugin>
+            <!-- Define a classe principal no manifesto para o jar rodar com "java -jar" (usado no stage Deploy) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>br.inatel.engsoftware.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

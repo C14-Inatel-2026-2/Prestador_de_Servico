@@ -38,6 +38,29 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    // Ambiente de execução simulado: pasta fora do workspace que guarda a última versão aprovada
+                    def destino = isUnix() ? "${env.JENKINS_HOME}/deploy/prestador-de-servicos" : "${env.JENKINS_HOME}\\deploy\\prestador-de-servicos"
+
+                    if (isUnix()) {
+                        sh "mkdir -p '${destino}'"
+                        sh "cp target/Projeto_Eng_Software-1.0-SNAPSHOT.jar '${destino}/prestador-de-servicos.jar'"
+                        // Smoke test: garante que a versão implantada executa
+                        sh "java -jar '${destino}/prestador-de-servicos.jar'"
+                    } else {
+                        bat "if not exist \"${destino}\" mkdir \"${destino}\""
+                        bat "copy /Y target\\Projeto_Eng_Software-1.0-SNAPSHOT.jar \"${destino}\\prestador-de-servicos.jar\""
+                        // Smoke test: garante que a versão implantada executa
+                        bat "java -jar \"${destino}\\prestador-de-servicos.jar\""
+                    }
+
+                    echo "Build #${env.BUILD_NUMBER} implantado em ${destino}"
+                }
+            }
+        }
     }
 
     post {
