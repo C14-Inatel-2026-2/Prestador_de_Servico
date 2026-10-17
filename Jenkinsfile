@@ -25,6 +25,19 @@ pipeline {
                 }
             }
         }
+
+        stage('Cobertura') {
+            steps {
+                script {
+                    // Reprova o build se a cobertura de linhas ficar abaixo do mínimo definido no pom.xml
+                    if (isUnix()) {
+                        sh 'mvn -B jacoco:check'
+                    } else {
+                        bat 'mvn -B jacoco:check'
+                    }
+                }
+            }
+        }
     }
 
     post {
