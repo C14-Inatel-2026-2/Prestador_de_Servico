@@ -15,6 +15,8 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- JVM usada pelo Surefire para rodar os testes (macOS/Linux). No Windows o profile "windows" abaixo troca para java.exe -->
+        <surefire.jvm>${java.home}/bin/java</surefire.jvm>
     </properties>
 
     <!-- Aqui entrarão as dependências do projeto no futuro (como JUnit para testes, etc) -->
@@ -80,12 +82,14 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Surefire: o argLine é exigido pelo JaCoCo e o jvm usa a propriedade surefire.jvm, que muda conforme o sistema operacional -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.4</version>
                 <configuration>
                     <argLine>@{argLine}</argLine>
+                    <jvm>${surefire.jvm}</jvm>
                 </configuration>
             </plugin>
             <!-- Define a classe principal no manifesto para o jar rodar com "java -jar" (usado no stage Deploy) -->
@@ -104,6 +108,19 @@
         </plugins>
     </build>
 
-
+    <profiles>
+        <!-- Ativado automaticamente no Windows: o Surefire precisa chamar o java.exe com a extensão -->
+        <profile>
+            <id>windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <surefire.jvm>${java.home}/bin/java.exe</surefire.jvm>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>
