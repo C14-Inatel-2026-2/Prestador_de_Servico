@@ -106,7 +106,7 @@ public class AvaliacaoTest {
 
         String msg = ex.getMessage();
         assertTrue(msg.contains("Nota deve estar entre 1 e 5"));
-        assertTrue(msg.contains("nUm usuário não pode avaliar a si mesmo"));
+        assertTrue(msg.contains("Um usuário não pode avaliar a si mesmo"));
         assertTrue(msg.contains("Data é obrigatória"));
     }
     @Test
