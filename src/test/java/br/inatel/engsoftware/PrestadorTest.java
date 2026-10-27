@@ -93,10 +93,6 @@ public class PrestadorTest {
         Avaliacao avaliacao2 = Mockito.mock(Avaliacao.class);
 
 
-        when(avaliacao1.validar()).thenReturn(true);
-        when(avaliacao2.validar()).thenReturn(true);
-
-
         when(avaliacao1.getIdAvaliado()).thenReturn(1);
         when(avaliacao2.getIdAvaliado()).thenReturn(1);
 
@@ -115,8 +111,6 @@ public class PrestadorTest {
     void testeReceberAvaliacaoRejeitaAvaliacaoInvalida() {
         Avaliacao avaliacaoInvalida = Mockito.mock(Avaliacao.class);
 
-        // Finge que a avaliação tem algum dado errado e falhou na regra
-        when(avaliacaoInvalida.validar()).thenReturn(false);
         when(avaliacaoInvalida.getIdAvaliado()).thenReturn(1);
 
         // Garante que o Fail-Fast funciona
@@ -128,8 +122,6 @@ public class PrestadorTest {
     @Test
     void testeReceberAvaliacaoRejeitaAvaliacaoDeOutroPrestador() {
         Avaliacao avaliacaoDeOutro = Mockito.mock(Avaliacao.class);
-
-        when(avaliacaoDeOutro.validar()).thenReturn(true);
 
 
         when(avaliacaoDeOutro.getIdAvaliado()).thenReturn(2);
@@ -160,7 +152,6 @@ public class PrestadorTest {
 
         Assertions.assertEquals(3, prestador.listarAvaliacoesRecebidas().size());
         Assertions.assertEquals(11.0 / 3.0, prestador.getNotamedia(), 0.0001);
-        verify(ruim).validar();
     }
 
     @Test
@@ -192,7 +183,6 @@ public class PrestadorTest {
 
     private Avaliacao criarAvaliacaoMock(int idAvaliado, int nota) {
         Avaliacao avaliacao = Mockito.mock(Avaliacao.class);
-        when(avaliacao.validar()).thenReturn(true);
         when(avaliacao.getIdAvaliado()).thenReturn(idAvaliado);
         when(avaliacao.getNota()).thenReturn(nota);
         return avaliacao;

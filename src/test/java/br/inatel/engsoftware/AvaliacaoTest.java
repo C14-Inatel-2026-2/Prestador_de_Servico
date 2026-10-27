@@ -2,18 +2,25 @@ package br.inatel.engsoftware;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-
 import java.time.LocalDate;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AvaliacaoTest {
+    LocalDate data = LocalDate.of(2026, 9, 3);
+    LocalDate amanha = LocalDate.now().plusDays(1);
+
+    private Avaliacao criarComNota(int nota) {
+        return new Avaliacao(1, 1, 2, nota, "Serviço otimo", LocalDate.now());
+    }
+    @Test
+    void devePermitirNotaMinimaEMaxima(){
+        assertDoesNotThrow(() -> criarComNota(Avaliacao.NOTA_MINIMA));
+        assertDoesNotThrow(() -> criarComNota(Avaliacao.NOTA_MAXIMA));
+    }
 
     @Test
     void testeGettersSetters(){
-
-            LocalDate data  = LocalDate.of(2026,9,3);
-            Avaliacao avaliacao = new Avaliacao(10, 1, 2, 5,
-                    "Serviço excelente!",
-                    data);
+            Avaliacao avaliacao = new Avaliacao(10, 1, 2, 5, "Serviço excelente!", data);
 
             Assertions.assertEquals(10, avaliacao.getId());
             Assertions.assertEquals(1,avaliacao.getIdAutor());
@@ -24,71 +31,108 @@ public class AvaliacaoTest {
     }
 
     @Test
-    void testeValidarAvaliacaoCorreta() {
-        // 6 parâmetros: id (10), Autor (1), Avaliado (2), Nota (5), Comentário, Data
-        Avaliacao avaliacao = new Avaliacao(10, 1, 2, 5,
-                "Serviço excelente!",
-                LocalDate.now());
-
-        Assertions.assertTrue(avaliacao.validar());
+    void testeBloqueiaNotaForaDoLimite() {
+        assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 2, 3, -1, "Serviço excelente!", LocalDate.now()));
+        assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 4, 5, 6, "Serviço excelente!", LocalDate.now()));
     }
 
     @Test
-    void testeValidarBloqueiaNotaForaDoLimite() {
-        // Removido o '0' extra. Apenas 6 parâmetros.
-        Avaliacao avaliacaoAcima = new Avaliacao(11, 1, 2, 6, "Nota alta", LocalDate.now());
-        Avaliacao avaliacaoAbaixo = new Avaliacao(12, 1, 2, 0, "Nota baixa", LocalDate.now());
-
-        Assertions.assertFalse(avaliacaoAcima.validar());
-        Assertions.assertFalse(avaliacaoAbaixo.validar());
+    void testeBloqueiaAutoAvaliacao() {
+        assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 2, 2, 3, "Serviço excelente!", LocalDate.now()));
+    }
+    @Test
+    void deveRejeitarIdAvaliadoNaoPositivo() {
+        assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 1, -2, 4, "Serviço excelente!", LocalDate.now()));
     }
 
     @Test
-    void testeValidarBloqueiaAutoAvaliacao() {
-        // Autor e Avaliado têm o mesmo ID (1)
-        Avaliacao avaliacao = new Avaliacao(13, 1, 1, 4, "Avaliando a mim mesmo", LocalDate.now());
-
-        Assertions.assertFalse(avaliacao.validar());
+    void deveRejeitarIdAutorNaoPositivo() {
+        assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, -3, 1, 4, "Serviço excelente!", LocalDate.now()));
     }
 
     @Test
-    void testeValidarBloqueiaDataNula() {
-        // O último parâmetro (data) está nulo
-        Avaliacao avaliacao = new Avaliacao(14, 1, 2, 4, "Faltou a data", null);
-
-        Assertions.assertFalse(avaliacao.validar());
+    void deveRejeitarDataNoFuturo() {
+        assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 1, 2, 4, "Serviço excelente!", amanha));
+    }
+    @Test
+    void deveAceitarDataDeHoje() {
+        assertDoesNotThrow(() -> new Avaliacao(1, 1, 2, 4, "Serviço excelente!", LocalDate.now()));
     }
 
     @Test
-    void testeFormatarComComentario() {
-        LocalDate data = LocalDate.of(2026, 9, 3);
-        Avaliacao avaliacao = new Avaliacao(15, 1, 2, 5, "Muito bom!", data);
-
-        Assertions.assertEquals("[2026-09-03] Nota 5/5 - Muito bom!", avaliacao.formatar());
+    void deveRejeitarComentarioMuitoLongo() {
+        String longo = "a".repeat(Avaliacao.TAMANHO_MAXIMO_COMENTARIO + 1);
+        assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 1, 2, 4, longo, LocalDate.now()));
     }
 
     @Test
-    void testeFormatarSemComentario() {
-        LocalDate data = LocalDate.of(2026, 9, 3);
-        // Passando string vazia (em branco) para testar o ternário
-        Avaliacao avaliacao = new Avaliacao(16, 1, 2, 3, "   ", data);
-
-        Assertions.assertEquals("[2026-09-03] Nota 3/5 - sem comentario", avaliacao.formatar());
+    void deveAceitarComentarioNoTamanhoMaximo() {
+        String limite = "a".repeat(Avaliacao.TAMANHO_MAXIMO_COMENTARIO);
+        assertDoesNotThrow(() -> new Avaliacao(1, 1, 2, 4, limite, LocalDate.now()));
     }
 
     @Test
-    void testeValidarAceitaNotaMinima() {
-        Avaliacao avaliacao = new Avaliacao(17, 1, 2, 1, "Ruim", LocalDate.now());
+    void deveAceitarComentarioNulo() {
+        assertDoesNotThrow(() -> new Avaliacao(1, 1, 2, 4, null, LocalDate.now()));
+    }
 
-        Assertions.assertTrue(avaliacao.validar());
+    @Test
+    void mensagemDeveIndicarNotaInvalida() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 1, 2, 99, "Serviço excelente!", LocalDate.now()));
+        assertTrue(ex.getMessage().contains("Nota deve estar entre 1 e 5"));
+    }
+
+    @Test
+    void mensagemDeveIndicarAutoAvaliacao() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 3, 3, 4, "Serviço excelente!", LocalDate.now()));
+        assertTrue(ex.getMessage().contains("Um usuário não pode avaliar a si mesmo"));
+    }
+
+    @Test
+    void mensagemDeveIndicarDataObrigatoria() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 1, 2, 4, "Serviço excelente!", null));
+        assertTrue(ex.getMessage().contains("Data é obrigatória"));
+    }
+
+    @Test
+    void mensagemDeveIndicarDataNoFuturo() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 1, 2, 4, "Serviço excelente!", amanha));
+        assertTrue(ex.getMessage().contains("Data não pode estar no futuro"));
+    }
+
+    @Test
+    void deveReportarTodosOsErrosDeUmaVez() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 3, 3, 99, "Serviço excelente!", null));
+
+        String msg = ex.getMessage();
+        assertTrue(msg.contains("Nota deve estar entre 1 e 5"));
+        assertTrue(msg.contains("nUm usuário não pode avaliar a si mesmo"));
+        assertTrue(msg.contains("Data é obrigatória"));
+    }
+    @Test
+    void formatarDeveUsarDataNoPadraoBrasileiro() {
+        Avaliacao avaliacao = new Avaliacao(1, 1, 2, 5, "Ótimo",data);
+        assertEquals("[03/09/2026] Nota 5/5 - Ótimo", avaliacao.formatar());
     }
 
     @Test
     void testeFormatarComComentarioNulo() {
-        LocalDate data = LocalDate.of(2026, 9, 3);
         Avaliacao avaliacao = new Avaliacao(18, 1, 2, 3, null, data);
 
-        Assertions.assertEquals("[2026-09-03] Nota 3/5 - sem comentario", avaliacao.formatar());
+        assertEquals("[03/09/2026] Nota 3/5 - sem comentario", avaliacao.formatar());
     }
+
+    @Test
+    void formatarDeveMostrarSemComentarioQuandoSoEspacos() {
+        Avaliacao avaliacao = new Avaliacao(1, 1, 2, 3, "   ", data);
+        assertEquals("[03/09/2026] Nota 3/5 - sem comentario", avaliacao.formatar());
+    }
+
+    @Test
+    void formatarDeveRemoverEspacosDasPontasDoComentario() {
+        Avaliacao avaliacao = new Avaliacao(1, 1, 2, 4, "  legal  ", data);
+        assertEquals("[03/09/2026] Nota 4/5 - legal", avaliacao.formatar());
+    }
+
 
 }
