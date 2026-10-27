@@ -24,9 +24,6 @@ public class Contratante extends Usuario {
             return null;
         }
         Avaliacao avaliacao = new Avaliacao(0,this.getId(), avaliado.getId(), nota, comentario, LocalDate.now());
-        if (!avaliacao.validar()) {
-            return null;
-        }
         return avaliacao;
     }
     public List<Avaliacao> listarMinhasAvaliacoes() {
