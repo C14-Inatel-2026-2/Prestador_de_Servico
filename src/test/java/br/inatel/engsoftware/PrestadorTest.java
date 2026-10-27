@@ -108,28 +108,26 @@ public class PrestadorTest {
     }
 
     @Test
-    void testeReceberAvaliacaoRejeitaAvaliacaoInvalida() {
+    void testeReceberAvaliacaoRejeitaAvaliacaoInvalida(){
         Avaliacao avaliacaoInvalida = Mockito.mock(Avaliacao.class);
+        when(avaliacaoInvalida.getIdAvaliado()).thenReturn(999);
 
-        when(avaliacaoInvalida.getIdAvaliado()).thenReturn(1);
-
-        // Garante que o Fail-Fast funciona
         Assertions.assertThrows(IllegalArgumentException.class, () -> {
             prestador.receberAvaliacao(avaliacaoInvalida);
         });
     }
 
     @Test
-    void testeReceberAvaliacaoRejeitaAvaliacaoDeOutroPrestador() {
-        Avaliacao avaliacaoDeOutro = Mockito.mock(Avaliacao.class);
+    void AvaliacaoNulaEhRejeitadaENaoAlteraMedia(){
+        prestador.receberAvaliacao(criarAvaliacaoMock(1,4));
+
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> prestador.receberAvaliacao((null)));
+
+        Assertions.assertEquals(1,prestador.listarAvaliacoesRecebidas().size());
+        Assertions.assertEquals(4.0,prestador.getNotamedia());
 
 
-        when(avaliacaoDeOutro.getIdAvaliado()).thenReturn(2);
-
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            prestador.receberAvaliacao(avaliacaoDeOutro);
-        });
     }
 
     @Test
