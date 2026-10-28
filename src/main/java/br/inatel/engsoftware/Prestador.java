@@ -70,7 +70,7 @@ public class Prestador extends Usuario {
     }
 
     public void receberAvaliacao(Avaliacao avaliacao) {
-        // Verifica se não é nula, se passou na validação da própria avaliação e se pertence a este prestador
+
         if (avaliacao != null && avaliacao.getIdAvaliado() == this.getId()) {
             avaliacoesRecebidas.add(avaliacao);
             calcularEAtualizarMedia();
