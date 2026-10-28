@@ -1,13 +1,13 @@
 package br.inatel.engsoftware;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*; //o * importa todas verificações, permite escrever assertEquals direto sem o Assertion
 
 public class AvaliacaoTest {
     LocalDate data = LocalDate.of(2026, 9, 3);
     LocalDate amanha = LocalDate.now().plusDays(1);
+    LocalDate ontem = LocalDate.now().minusDays(1);
 
     private Avaliacao criarComNota(int nota) {
         return new Avaliacao(1, 1, 2, nota, "Serviço otimo", LocalDate.now());
@@ -22,12 +22,12 @@ public class AvaliacaoTest {
     void testeGettersSetters(){
             Avaliacao avaliacao = new Avaliacao(10, 1, 2, 5, "Serviço excelente!", data);
 
-            Assertions.assertEquals(10, avaliacao.getId());
-            Assertions.assertEquals(1,avaliacao.getIdAutor());
-            Assertions.assertEquals(2,avaliacao.getIdAvaliado());
-            Assertions.assertEquals(5,avaliacao.getNota());
-            Assertions.assertEquals("Serviço excelente!",avaliacao.getComentario());
-            Assertions.assertEquals(data,avaliacao.getData());
+            assertEquals(10, avaliacao.getId());
+            assertEquals(1,avaliacao.getIdAutor());
+            assertEquals(2,avaliacao.getIdAvaliado());
+            assertEquals(5,avaliacao.getNota());
+            assertEquals("Serviço excelente!",avaliacao.getComentario());
+            assertEquals(data,avaliacao.getData());
     }
 
     @Test
@@ -54,6 +54,11 @@ public class AvaliacaoTest {
     void deveRejeitarDataNoFuturo() {
         assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 1, 2, 4, "Serviço excelente!", amanha));
     }
+    @Test
+    void deveRejeitarDataNoPassado() {
+        assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 1, 2, 4, "Serviço excelente!", ontem));
+    }
+
     @Test
     void deveAceitarDataDeHoje() {
         assertDoesNotThrow(() -> new Avaliacao(1, 1, 2, 4, "Serviço excelente!", LocalDate.now()));
