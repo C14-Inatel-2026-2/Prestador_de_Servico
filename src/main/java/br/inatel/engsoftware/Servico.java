@@ -37,7 +37,7 @@ public class Servico {
 
     public boolean validar() {
         return nome != null && !nome.isBlank() &&
-                precoSugerido >= 0;
+                (precoSugerido >= 0);
     }
 
     public String formatar() {
