@@ -48,10 +48,9 @@ public class Avaliacao {
         }
         if (data == null) {
             erros.add("Data é obrigatória");
-        } else if (data.isAfter(LocalDate.now())) {
+        }
+        else if(data.isAfter(LocalDate.now())){
             erros.add("Data não pode estar no futuro");
-        } else if(data.isBefore(LocalDate.now())){
-            erros.add("Data não pode estar no passado");
         }
         if (comentario != null && comentario.length() > TAMANHO_MAXIMO_COMENTARIO) {
             erros.add("Comentário deve ter no máximo " + TAMANHO_MAXIMO_COMENTARIO + " caracteres");
