@@ -25,7 +25,7 @@ public class ServicoDAO {
     // Cadastro de serviço
     public void inserir(Servico servico) throws SQLException {
 
-        if (servico == null || servico.validar()) {
+        if (servico == null || !servico.validar()) {
             throw new IllegalArgumentException("Serviço invalido");
         }
 
@@ -95,7 +95,7 @@ public class ServicoDAO {
     // Atualizar serviço
     public boolean atualizar(Servico servico) throws SQLException {
 
-        if (servico == null || servico.validar()) {
+        if (servico == null || !servico.validar()) {
             throw new IllegalArgumentException("Serviço invalido");
         }
 

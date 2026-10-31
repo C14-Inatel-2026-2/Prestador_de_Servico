@@ -48,13 +48,23 @@ pipeline {
                     if (isUnix()) {
                         sh "mkdir -p '${destino}'"
                         sh "cp target/Projeto_Eng_Software-1.0-SNAPSHOT.jar '${destino}/prestador-de-servicos.jar'"
-                        // Smoke test: garante que a versão implantada executa
-                        sh "java -jar '${destino}/prestador-de-servicos.jar'"
+
+                        // Executa o banco simulado apenas se a variável DB_URL estiver configurada
+                        if (env.DB_URL) {
+                            sh "java -jar '${destino}/prestador-de-servicos.jar'"
+                        } else {
+                            echo "DB_URL não configurada neste Jenkins. Smoke test pulado."
+                        }
                     } else {
                         bat "if not exist \"${destino}\" mkdir \"${destino}\""
                         bat "copy /Y target\\Projeto_Eng_Software-1.0-SNAPSHOT.jar \"${destino}\\prestador-de-servicos.jar\""
-                        // Smoke test: garante que a versão implantada executa
-                        bat "java -jar \"${destino}\\prestador-de-servicos.jar\""
+
+                        // Executa o banco simulado apenas se a variável DB_URL estiver configurada
+                        if (env.DB_URL) {
+                            bat "java -jar \"${destino}\\prestador-de-servicos.jar\""
+                        } else {
+                            echo "DB_URL não configurada neste Jenkins. Smoke test pulado."
+                        }
                     }
 
                     echo "Build #${env.BUILD_NUMBER} implantado em ${destino}"
@@ -67,22 +77,22 @@ pipeline {
         always {
             // Publica os resultados dos testes JUnit
             junit(
-                testResults: 'target/surefire-reports/TEST-*.xml',
-                allowEmptyResults: true
+                    testResults: 'target/surefire-reports/TEST-*.xml',
+                    allowEmptyResults: true
             )
 
             // Publica a cobertura de código do JaCoCo
             recordCoverage(
-                tools: [[
-                    parser: 'JACOCO',
-                    pattern: 'target/site/jacoco/jacoco.xml'
-                ]]
+                    tools: [[
+                                    parser: 'JACOCO',
+                                    pattern: 'target/site/jacoco/jacoco.xml'
+                            ]]
             )
 
             // Mantém os arquivos HTML e XML disponíveis
             archiveArtifacts(
-                artifacts: 'target/site/jacoco/**',
-                allowEmptyArchive: true
+                    artifacts: 'target/site/jacoco/**',
+                    allowEmptyArchive: true
             )
         }
 
@@ -95,4 +105,3 @@ pipeline {
         }
     }
 }
-
