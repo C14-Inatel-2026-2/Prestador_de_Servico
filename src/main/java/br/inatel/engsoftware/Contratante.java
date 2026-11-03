@@ -31,12 +31,11 @@ public class Contratante extends Usuario {
             // Tenta criar a avaliação. Se a nota for -1 ou 1000, a classe da sua colega vai estourar um erro aqui.
             Avaliacao avaliacao = new Avaliacao(0, this.getId(), avaliado.getId(), nota, comentario, LocalDate.now());
 
-            // Se passou direto sem erro, salva a avaliação e retorna
+
             this.minhasAvaliacoes.add(avaliacao);
             return avaliacao;
 
-        } catch (IllegalArgumentException e) {
-            // O Catch captura o bloqueio da sua colega e devolve null, fazendo seus testes ficarem verdes!
+        } catch (IllegalArgumentException e){
             return null;
         }
     }

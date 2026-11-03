@@ -30,18 +30,18 @@ Não é necessário Docker nem conta no site do Jenkins. Tudo roda localmente em
 
 1. Baixe o **Temurin 21 (LTS)**, formato `.msi`, em <https://adoptium.net/temurin/releases/?version=21>.
 2. Na tela **Custom Setup** do instalador, ative:
-    - **Modify PATH variable**
-    - **Set or override JAVA_HOME variable** (clique no ícone e escolha *Will be installed on local hard drive*)
+   - **Modify PATH variable**
+   - **Set or override JAVA_HOME variable** (clique no ícone e escolha *Will be installed on local hard drive*)
 3. Conclua a instalação.
 
 ## 2. Instalar o Jenkins
 
 1. Baixe o instalador `.msi` da versão **LTS** para Windows em <https://www.jenkins.io/download/>.
 2. Durante a instalação:
-    - **Logon Type:** marque **Run service as LocalSystem**.
-    - **Porta:** deixe `8080`.
-    - **Java:** aponte para a pasta do JDK 21, por exemplo `C:\Program Files\Eclipse Adoptium\jdk-21...-hotspot\` (a pasta do JDK, não a `bin`).
-    - **Firewall Exception:** pode deixar desmarcado.
+   - **Logon Type:** marque **Run service as LocalSystem**.
+   - **Porta:** deixe `8080`.
+   - **Java:** aponte para a pasta do JDK 21, por exemplo `C:\Program Files\Eclipse Adoptium\jdk-21...-hotspot\` (a pasta do JDK, não a `bin`).
+   - **Firewall Exception:** pode deixar desmarcado.
 3. Finalize a instalação.
 
 ## 3. Configuração inicial
@@ -109,14 +109,32 @@ Para conferir o deploy: abra o **Console Output** do build e procure a mensagem 
 java -jar "C:\ProgramData\Jenkins\.jenkins\deploy\prestador-de-servicos\prestador-de-servicos.jar"
 ```
 
+### Deploy e banco de dados
+
+A aplicação acessa o banco de dados e lê os dados da conexão de **variáveis de ambiente**: `DB_URL` e as demais que o `Conexao.java` exigir, como usuário e senha do banco. Essas variáveis **não ficam no repositório**. Cada pessoa as cadastra no próprio Jenkins, e só quem tem acesso ao banco precisa fazer isso.
+
+O stage Deploy se comporta de acordo com o que está configurado no Jenkins:
+
+- **Sem `DB_URL` configurada:** o `.jar` é copiado para a pasta de deploy, o smoke test (`java -jar`) é pulado e o Console Output mostra a mensagem `DB_URL não configurada neste Jenkins`. O build continua verde.
+- **Com `DB_URL` configurada:** o smoke test roda normalmente. Se a aplicação não conseguir conectar ao banco, o build fica vermelho.
+
+Para cadastrar as variáveis no Jenkins de quem tem acesso ao banco:
+
+1. Vá em **Gerenciar Jenkins > System**.
+2. Na seção **Global properties**, marque **Environment variables**.
+3. Clique em **Add** e crie cada variável, com o nome exato que o `Conexao.java` espera e o valor real.
+4. Clique em **Save** e rode o build de novo.
+
+> **Atenção:** nunca coloque senha, URL do banco ou um arquivo `.env` com dados reais no repositório. Se o banco estiver rodando no computador de uma pessoa (`localhost`), só o Jenkins dessa máquina consegue conectar nele. Nas demais máquinas, o Deploy continua passando porque o smoke test é pulado.
+
 ## 7. Criar o job no Jenkins
 
 1. Na tela inicial, clique em **Novo tarefa**.
 2. Dê um nome (por exemplo `Projeto_Eng_Software`), escolha **Multibranch Pipeline** e clique em **OK**.
 3. Em **Branch Sources**, clique em **Add source > Git**:
-    - **Project Repository:** `https://github.com/C14-Inatel-2026-2/Prestador_de_Servico`
-    - **Credentials:** `- none -` (o repositório é público)
-    - **Behaviours:** deixe **Discover branches** (sem filtro, para o Jenkins achar a branch de cada pessoa).
+   - **Project Repository:** `https://github.com/C14-Inatel-2026-2/Prestador_de_Servico`
+   - **Credentials:** `- none -` (o repositório é público)
+   - **Behaviours:** deixe **Discover branches** (sem filtro, para o Jenkins achar a branch de cada pessoa).
 4. Em **Build Configuration**, deixe **by Jenkinsfile** com Script Path `Jenkinsfile`.
 5. Em **Scan Multibranch Pipeline Triggers**, marque **Periodically if not otherwise run** e escolha um intervalo curto (por exemplo, 5 minutes).
 6. Clique em **Save**. O Jenkins faz o primeiro scan sozinho.

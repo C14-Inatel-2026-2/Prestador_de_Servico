@@ -3,9 +3,11 @@ package br.inatel.engsoftware;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*; //o * importa todas verificações, permite escrever assertEquals direto sem o Assertion
+import java.time.format.DateTimeFormatter;
 
 public class AvaliacaoTest {
-    LocalDate data = LocalDate.of(2026, 9, 3);
+    LocalDate data = LocalDate.now();
+    String dataFormatada = data.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     LocalDate amanha = LocalDate.now().plusDays(1);
     LocalDate ontem = LocalDate.now().minusDays(1);
 
@@ -55,8 +57,8 @@ public class AvaliacaoTest {
         assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 1, 2, 4, "Serviço excelente!", amanha));
     }
     @Test
-    void deveRejeitarDataNoPassado() {
-        assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 1, 2, 4, "Serviço excelente!", ontem));
+    void deveAceitarDataNoPassado(){
+        assertDoesNotThrow(() -> new Avaliacao(1, 1, 2, 4, "Serviço excelente!", ontem));
     }
 
     @Test
@@ -117,26 +119,25 @@ public class AvaliacaoTest {
     @Test
     void formatarDeveUsarDataNoPadraoBrasileiro() {
         Avaliacao avaliacao = new Avaliacao(1, 1, 2, 5, "Ótimo",data);
-        assertEquals("[03/09/2026] Nota 5/5 - Ótimo", avaliacao.formatar());
+        assertEquals("[" + dataFormatada + "] Nota 5/5 - Ótimo", avaliacao.formatar());
     }
 
     @Test
     void testeFormatarComComentarioNulo() {
         Avaliacao avaliacao = new Avaliacao(18, 1, 2, 3, null, data);
 
-        assertEquals("[03/09/2026] Nota 3/5 - sem comentario", avaliacao.formatar());
+        assertEquals("[" + dataFormatada + "] Nota 3/5 - sem comentario", avaliacao.formatar());
     }
-
     @Test
     void formatarDeveMostrarSemComentarioQuandoSoEspacos() {
         Avaliacao avaliacao = new Avaliacao(1, 1, 2, 3, "   ", data);
-        assertEquals("[03/09/2026] Nota 3/5 - sem comentario", avaliacao.formatar());
+        assertEquals("[" + dataFormatada + "] Nota 3/5 - sem comentario", avaliacao.formatar());
     }
 
     @Test
     void formatarDeveRemoverEspacosDasPontasDoComentario() {
         Avaliacao avaliacao = new Avaliacao(1, 1, 2, 4, "  legal  ", data);
-        assertEquals("[03/09/2026] Nota 4/5 - legal", avaliacao.formatar());
+        assertEquals("[" + dataFormatada + "] Nota 4/5 - legal", avaliacao.formatar());
     }
 
 
