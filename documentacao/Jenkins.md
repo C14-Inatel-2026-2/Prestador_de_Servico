@@ -11,20 +11,16 @@ Para cada branch que tem um `Jenkinsfile`, o Jenkins:
 3. Compila e empacota o projeto com `mvn -B clean package -DskipTests` (**Build**).
 4. Roda os testes e gera os relatórios de testes e de cobertura com `mvn -B verify` (**Test**).
 5. Reprova o build se a cobertura de linhas ficar abaixo de 70% com `mvn -B jacoco:check` (**Cobertura**).
-6. Implanta o `.jar` aprovado no ambiente de execução e roda um smoke test (**Deploy**).
+6. Dispara uma requisição webhook para atualizar a aplicação na nuvem (**Deploy**).
 7. Publica os resultados dos testes, a cobertura e o relatório HTML do JaCoCo, mesmo se algum stage falhar (**Post Actions**).
 
-Cada stage só roda se o anterior passou. Ou seja, o Deploy só acontece se o build, os testes e a cobertura estiverem aprovados.
-
-Não é necessário Docker nem conta no site do Jenkins. Tudo roda localmente em `http://localhost:8080`.
+Cada stage só roda se o anterior passou. Ou seja, o Deploy só acontece se o build, os testes e a cobertura estiverem 100% aprovados.
 
 ## Pré-requisitos
 
 - Windows
 - Git
-- **JDK 21** (o Jenkins 2.580 exige Java 21 ou 25; o Java 17 não funciona para o Jenkins)
-
-> O projeto pode continuar compilando com Java 17. O JDK 21 é necessário só para o próprio Jenkins rodar.
+- **JDK 21** (o Jenkins exige Java 21 ou 25; o Java 17 não funciona para rodar o servidor do Jenkins)
 
 ## 1. Instalar o JDK 21
 
@@ -40,177 +36,75 @@ Não é necessário Docker nem conta no site do Jenkins. Tudo roda localmente em
 2. Durante a instalação:
    - **Logon Type:** marque **Run service as LocalSystem**.
    - **Porta:** deixe `8080`.
-   - **Java:** aponte para a pasta do JDK 21, por exemplo `C:\Program Files\Eclipse Adoptium\jdk-21...-hotspot\` (a pasta do JDK, não a `bin`).
+   - **Java:** aponte para a pasta do JDK 21 (a pasta base do JDK, não a `bin`).
    - **Firewall Exception:** pode deixar desmarcado.
 3. Finalize a instalação.
 
 ## 3. Configuração inicial
 
-1. Abra `http://localhost:8080` (se aparecer "Jenkins is getting ready", aguarde um minuto e atualize).
-2. A senha inicial está em:
-   ```
-   C:\ProgramData\Jenkins\.jenkins\secrets\initialAdminPassword
-   ```
-   Abra o arquivo no Bloco de Notas e cole a senha.
-3. Escolha **Instalar as extensões sugeridas** e aguarde.
-4. Crie o seu usuário administrador (usuário e senha locais, só valem na sua máquina).
-5. Mantenha a URL `http://localhost:8080/` e conclua.
+1. Abra `http://localhost:8080`.
+2. A senha inicial está em: `C:\ProgramData\Jenkins\.jenkins\secrets\initialAdminPassword`
+3. Escolha **Instalar as extensões sugeridas**.
+4. Crie o seu usuário administrador e conclua.
 
 ## 4. Configurar o Maven no Jenkins
 
-> **Atenção:** o nome precisa ser exatamente `Maven3`, igual ao que está no `Jenkinsfile`. Qualquer outro nome faz o build falhar com "tool not found".
+> **Atenção:** o nome precisa ser exatamente `Maven3`, igual ao que está no `Jenkinsfile`.
 
 1. Vá em **Gerenciar Jenkins > Tools**.
 2. Em **Maven installations**, clique em **Add Maven**.
 3. Nome: `Maven3`.
 4. Marque **Install automatically** e clique em **Save**.
 
-Isso é feito no Jenkins (navegador), não no IntelliJ. O Maven embutido do IntelliJ não é visto pelo Jenkins.
-
 ## 5. Plugins
 
-Confira em **Gerenciar Jenkins > Plugins > Installed plugins**. O que faltar, instale em **Available plugins**.
+Obrigatórios em **Gerenciar Jenkins > Plugins**:
+- **JUnit**: Mostra o resultado dos testes no build.
+- **Coverage**: Mostra a cobertura do JaCoCo (Não vem nas extensões sugeridas, precisa instalar).
 
-| Plugin | Obrigatório? | Para que serve |
-|---|---|---|
-| **JUnit** | Sim | Passo `junit` do `Jenkinsfile`: mostra o resultado dos testes no build. |
-| **Coverage** | Sim | Passo `recordCoverage` do `Jenkinsfile`: mostra a cobertura do JaCoCo no build. Não vem nas extensões sugeridas. |
-| **Pipeline Graph View** | Não | Mostra o gráfico de stages, parecido com o GitHub Actions. Costuma vir nas extensões sugeridas. |
+## 6. O `Jenkinsfile` e o Deploy na Nuvem (Render)
 
-Sem os plugins obrigatórios, o build termina com erro do tipo `No such DSL method`.
-
-## 6. O `Jenkinsfile`
-
-O arquivo está na raiz do repositório e tem estes stages:
+A tabela de execução no Jenkinsfile segue esta ordem:
 
 | Stage | Comando | Falha quando |
 |---|---|---|
 | Build | `mvn -B clean package -DskipTests` | O código não compila. |
 | Test | `mvn -B verify` | Algum teste falha. |
-| Cobertura | `mvn -B jacoco:check` | A cobertura de linhas fica abaixo de 70% (regra no `pom.xml`). |
-| Deploy | cópia do `.jar` + `java -jar` | O `.jar` não é copiado ou não executa. |
+| Cobertura | `mvn -B jacoco:check` | A cobertura de linhas fica abaixo de 70%. |
+| Deploy | `curl -X POST ...` | O Jenkins não consegue acionar a API da nuvem. |
 
-Alterações no `Jenkinsfile` devem ser feitas por pull request, para ninguém quebrar o arquivo que todo o grupo usa.
+### Deploy via Render
+A aplicação é construída e hospedada em nuvem através do **Render**. Para que isso funcione, utilizamos um arquivo `Dockerfile` na raiz do projeto (que constrói a imagem Java 21) e um *Deploy Hook*.
 
-### Deploy
+O Jenkins apenas sinaliza o Render de que novos testes foram aprovados. Ele faz isso enviando uma requisição HTTP.
 
-A aplicação ainda é de console e não tem servidor, então o ambiente de execução é simulado por uma pasta fora do workspace, na máquina do Jenkins:
-
-- Windows: `C:\ProgramData\Jenkins\.jenkins\deploy\prestador-de-servicos\prestador-de-servicos.jar`
-- Linux/Mac: `$JENKINS_HOME/deploy/prestador-de-servicos/prestador-de-servicos.jar`
-
-O stage copia para essa pasta o `.jar` que passou nos testes e na cobertura e roda `java -jar` nele como smoke test. Se o `.jar` implantado não executar, o build fica vermelho. A pasta é a mesma para todas as branches, então ela sempre guarda o último build aprovado.
-
-Para o `java -jar` funcionar, o `pom.xml` define a classe principal (`br.inatel.engsoftware.Main`) no manifesto do jar, pelo `maven-jar-plugin`.
-
-Para conferir o deploy: abra o **Console Output** do build e procure a mensagem `Build #N implantado em ...`. Ou rode o `.jar` implantado direto no terminal:
-
-```
-java -jar "C:\ProgramData\Jenkins\.jenkins\deploy\prestador-de-servicos\prestador-de-servicos.jar"
-```
-
-### Deploy e banco de dados
-
-A aplicação acessa o banco de dados e lê os dados da conexão de **variáveis de ambiente**: `DB_URL` e as demais que o `Conexao.java` exigir, como usuário e senha do banco. Essas variáveis **não ficam no repositório**. Cada pessoa as cadastra no próprio Jenkins, e só quem tem acesso ao banco precisa fazer isso.
-
-O stage Deploy se comporta de acordo com o que está configurado no Jenkins:
-
-- **Sem `DB_URL` configurada:** o `.jar` é copiado para a pasta de deploy, o smoke test (`java -jar`) é pulado e o Console Output mostra a mensagem `DB_URL não configurada neste Jenkins`. O build continua verde.
-- **Com `DB_URL` configurada:** o smoke test roda normalmente. Se a aplicação não conseguir conectar ao banco, o build fica vermelho.
-
-Para cadastrar as variáveis no Jenkins de quem tem acesso ao banco:
-
+### Configurando o Deploy Hook no Jenkins
+Para que o Jenkins do seu computador consiga enviar esse aviso para a nuvem:
 1. Vá em **Gerenciar Jenkins > System**.
 2. Na seção **Global properties**, marque **Environment variables**.
-3. Clique em **Add** e crie cada variável, com o nome exato que o `Conexao.java` espera e o valor real.
-4. Clique em **Save** e rode o build de novo.
+3. Clique em **Add** e crie a variável:
+   - **Name:** `RENDER_DEPLOY_HOOK`
+   - **Value:** Cole a URL fornecida no painel do Render (em Settings > Deploy Hook).
+4. Clique em **Save**.
 
-> **Atenção:** nunca coloque senha, URL do banco ou um arquivo `.env` com dados reais no repositório. Se o banco estiver rodando no computador de uma pessoa (`localhost`), só o Jenkins dessa máquina consegue conectar nele. Nas demais máquinas, o Deploy continua passando porque o smoke test é pulado.
+*Nota:* Se essa variável não estiver configurada no seu Jenkins, o stage de Deploy será pulado e o pipeline terminará como sucesso apenas com a fase de testes local.
+
+### Banco de Dados (`DB_URL`)
+Como a aplicação agora roda em nuvem, as variáveis de conexão com o banco de dados (como `DB_URL`, usuário e senha) **NÃO** devem ser cadastradas no Jenkins nem devem ir para o GitHub.
+Elas devem ser configuradas exclusivamente no painel do Render, na aba **Environment**, onde a aplicação executará de fato.
 
 ## 7. Criar o job no Jenkins
 
-1. Na tela inicial, clique em **Novo tarefa**.
-2. Dê um nome (por exemplo `Projeto_Eng_Software`), escolha **Multibranch Pipeline** e clique em **OK**.
-3. Em **Branch Sources**, clique em **Add source > Git**:
+1. No Jenkins, clique em **Nova tarefa**.
+2. Dê um nome, escolha **Multibranch Pipeline** e clique em **OK**.
+3. Em **Branch Sources > Git**:
    - **Project Repository:** `https://github.com/C14-Inatel-2026-2/Prestador_de_Servico`
-   - **Credentials:** `- none -` (o repositório é público)
-   - **Behaviours:** deixe **Discover branches** (sem filtro, para o Jenkins achar a branch de cada pessoa).
-4. Em **Build Configuration**, deixe **by Jenkinsfile** com Script Path `Jenkinsfile`.
-5. Em **Scan Multibranch Pipeline Triggers**, marque **Periodically if not otherwise run** e escolha um intervalo curto (por exemplo, 5 minutes).
-6. Clique em **Save**. O Jenkins faz o primeiro scan sozinho.
+   - **Credentials:** `none`
+4. Em **Build Configuration**, deixe **by Jenkinsfile**.
+5. Salve. O Jenkins fará o primeiro scan.
 
-## 8. Ver o resultado
+## 8. Regras do Grupo
 
-1. Abra o job e clique na sua branch.
-2. Clique na execução (`#1`, `#2`...).
-3. O gráfico de stages deve ficar todo verde. Para ver o log completo, clique em **Console Output**; no final deve aparecer `BUILD SUCCESS` e `Finished: SUCCESS`.
-
-O Jenkins só cria o job de uma branch que **já tem o `Jenkinsfile`**. Se a sua branch foi criada antes de o arquivo chegar na `main`, traga-o para ela:
-
-```bash
-git checkout sua-branch
-git merge main
-git push
-```
-
-Depois clique em **Scan Repository Now** no job.
-
-## Fluxo de trabalho do grupo
-
-1. Cada pessoa trabalha na própria branch.
-2. Antes de abrir o pull request, confira que o build da sua branch ficou **verde** no Jenkins.
-3. Cole um print do gráfico de stages na descrição do PR.
-4. O PR só deve ser aprovado com o build verde.
-5. Depois do merge, o `Jenkinsfile` e as mudanças ficam na `main`. Clique em **Scan Repository Now** para o Jenkins criar o job da `main`.
-
-## Rodar a pipeline só na main (opcional)
-
-Se o grupo decidir que o Jenkins deve construir apenas a `main`, existem duas formas. Em ambas, o `Jenkinsfile` precisa estar na `main`.
-
-> **O que muda:** com só a `main`, nada é construído antes do merge. Para testar sua branch antes do pull request, rode o build localmente pelo painel **Maven** do IntelliJ (**Lifecycle > clean** e **package**), ou remova o filtro temporariamente.
-
-### Opção A: manter o job Multibranch e filtrar a main (mais simples)
-
-1. Abra o job no Jenkins e clique em **Configurar** (menu da esquerda).
-2. Em **Branch Sources > Git > Behaviours**, clique em **Add** e escolha **Filter by name (with wildcards)**.
-3. Em **Include**, escreva `main`. Deixe **Exclude** vazio.
-4. Clique em **Save** e depois em **Scan Repository Now**.
-
-As outras branches deixam de ser construídas e saem da lista do job (ou ficam marcadas como desativadas). Para voltar a construir todas as branches, remova o filtro com o **X** vermelho ao lado dele e salve de novo.
-
-### Opção B: trocar por um job Pipeline simples
-
-Use esta opção se quiser abandonar o Multibranch de vez.
-
-1. Na tela inicial, clique em **Novo tarefa**, dê um nome e escolha **Pipeline** (não o Multibranch).
-2. Em **Build Triggers**, marque **Poll SCM** e coloque `H/5 * * * *` para o Jenkins verificar o GitHub a cada 5 minutos (opcional).
-3. Em **Pipeline**, escolha **Definition: Pipeline script from SCM**.
-4. **SCM:** Git. **Repository URL:** `https://github.com/C14-Inatel-2026-2/Prestador_de_Servico`. **Credentials:** `- none -`.
-5. **Branch Specifier:** `*/main`.
-6. **Script Path:** `Jenkinsfile`.
-7. Clique em **Save** e depois em **Construir agora**.
-
-O gráfico de stages e o **Console Output** funcionam igual aos do Multibranch. Depois de criar o job novo, o job Multibranch antigo pode ser apagado ou desativado.
-
-## Problemas comuns
-
-| Problema | Causa e solução |
-|---|---|
-| Instalador do Jenkins diz "Failed to find compatible Java version (21 or 25)" | Instale o JDK 21 e aponte para a pasta dele no instalador. |
-| Build falha com "tool not found" ou similar | O Maven não foi cadastrado como `Maven3` em **Gerenciar Jenkins > Tools** (o nome precisa ser idêntico). |
-| `mvn` não é reconhecido no terminal do Windows | Normal. O Maven não está no PATH do Windows e isso não afeta o Jenkins. Para testar localmente, use o painel **Maven** do IntelliJ. |
-| O scan não encontra sua branch | O `Jenkinsfile` não está nela ou o push não foi feito. Confira no GitHub e use `git merge main` se for o caso. |
-| A `main` não aparece no Jenkins | O `Jenkinsfile` ainda não chegou na `main`. Depois do merge do PR, clique em **Scan Repository Now**. |
-| Porta 8080 em uso | Troque a porta no instalador (por exemplo, 8081) ou feche o programa que está usando. |
-| Novos pushes não disparam build sozinhos | O Jenkins roda em `localhost` e o GitHub não consegue avisá-lo. Use o scan periódico ou **Scan Repository Now**. |
-| `No such DSL method 'recordCoverage'` ou `'junit'` | Falta o plugin **Coverage** ou **JUnit**. Veja a seção 5. |
-| Stage Deploy falha com `'java' não é reconhecido` | O serviço do Jenkins não enxerga o Java no PATH. Reinicie o serviço do Jenkins ou troque `java` por `"%JAVA_HOME%\bin\java"` no stage Deploy. |
-| Stage Deploy falha com `no main manifest attribute` | O `pom.xml` da sua branch está sem a configuração do `maven-jar-plugin`. Traga a `main` para a sua branch com `git merge main`. |
-
-## Próximos passos
-
-Aviso para o próximo membro que for mexer na pipeline:
-
-- **Deploy externo.** Hoje o Deploy é local. Quando houver um servidor ou uma interface, troque só o stage Deploy (por exemplo, publicando o `.jar` no GitHub Releases ou em um servidor). Os outros stages continuam iguais.
-
-- **Manter esta documentação atualizada.** Sempre que o `Jenkinsfile` ou o processo de configuração mudar (novo stage, nova versão do Java, mudança no job), atualize este arquivo no mesmo pull request.
+1. Trabalhe em branch própria.
+2. Todo pull request precisa de uma captura de tela do gráfico verde de aprovação do Jenkins na descrição.
+3. Use a padronização semântica (ex: `feat:`, `fix:`, `ci:`, `build:`).
