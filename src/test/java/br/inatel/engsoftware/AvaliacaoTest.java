@@ -140,5 +140,24 @@ public class AvaliacaoTest {
         assertEquals("[" + dataFormatada + "] Nota 4/5 - legal", avaliacao.formatar());
     }
 
+    @Test
+    void testeAvaliacaoRecusaIdsENotaNoLimiteDoZero() { //valor limite: 0 é o primeiro valor inválido. Sem mock: só a classe Avaliacao
+        IllegalArgumentException autorZero = assertThrows(IllegalArgumentException.class,
+                () -> new Avaliacao(1, 0, 8, 4, "Consertou o cano!", LocalDate.now()));
+        assertTrue(autorZero.getMessage().contains("Id do autor deve ser positivo"));
+
+        IllegalArgumentException avaliadoZero = assertThrows(IllegalArgumentException.class,
+                () -> new Avaliacao(1, 2, 0, 4, "Consertou o cano!", LocalDate.now()));
+        assertTrue(avaliadoZero.getMessage().contains("Id do avaliado deve ser positivo"));
+
+        IllegalArgumentException notaZero = assertThrows(IllegalArgumentException.class,
+                () -> new Avaliacao(1, 2, 8, 0, "Consertou o cano!", LocalDate.now()));
+        assertTrue(notaZero.getMessage().contains("Nota deve estar entre 1 e 5"));
+
+        Avaliacao primeiroValido = assertDoesNotThrow( //logo depois do limite: id 1 e nota 1 são aceitos
+                () -> new Avaliacao(1, 1, 8, 1, "Consertou o cano!", LocalDate.now()));
+        assertEquals(1, primeiroValido.getIdAutor());
+        assertEquals(1, primeiroValido.getNota());
+    }
 
 }

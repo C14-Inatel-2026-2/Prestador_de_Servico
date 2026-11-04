@@ -42,32 +42,22 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Ambiente de execução simulado: pasta fora do workspace que guarda a última versão aprovada
-                    def destino = isUnix() ? "${env.JENKINS_HOME}/deploy/prestador-de-servicos" : "${env.JENKINS_HOME}\\deploy\\prestador-de-servicos"
+                    // Aciona o webhook do Render para fazer o deploy na nuvem automaticamente
+                    if (env.RENDER_DEPLOY_HOOK) {
+                        echo "Gatilho do Render detectado! Avisando a nuvem para iniciar o deploy da nova versão..."
 
-                    if (isUnix()) {
-                        sh "mkdir -p '${destino}'"
-                        sh "cp target/Projeto_Eng_Software-1.0-SNAPSHOT.jar '${destino}/prestador-de-servicos.jar'"
-
-                        // Executa o banco simulado apenas se a variável DB_URL estiver configurada
-                        if (env.DB_URL) {
-                            sh "java -jar '${destino}/prestador-de-servicos.jar'"
+                        if (isUnix()) {
+                            sh "curl -X POST ${env.RENDER_DEPLOY_HOOK}"
                         } else {
-                            echo "DB_URL não configurada neste Jenkins. Smoke test pulado."
+
+                            bat "curl -X POST ${env.RENDER_DEPLOY_HOOK}"
                         }
+
+                        echo "Sinal de deploy enviado com sucesso. O Render construirá a imagem a partir do Dockerfile."
                     } else {
-                        bat "if not exist \"${destino}\" mkdir \"${destino}\""
-                        bat "copy /Y target\\Projeto_Eng_Software-1.0-SNAPSHOT.jar \"${destino}\\prestador-de-servicos.jar\""
-
-                        // Executa o banco simulado apenas se a variável DB_URL estiver configurada
-                        if (env.DB_URL) {
-                            bat "java -jar \"${destino}\\prestador-de-servicos.jar\""
-                        } else {
-                            echo "DB_URL não configurada neste Jenkins. Smoke test pulado."
-                        }
+                        echo "Variável RENDER_DEPLOY_HOOK não configurada neste Jenkins."
+                        echo "Deploy no Render pulado (Pipeline finalizada apenas com testes)."
                     }
-
-                    echo "Build #${env.BUILD_NUMBER} implantado em ${destino}"
                 }
             }
         }
