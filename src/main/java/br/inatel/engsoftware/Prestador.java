@@ -12,10 +12,20 @@ public class Prestador extends Usuario {
     private final List<String> servicos;
     private final List<Avaliacao> avaliacoesRecebidas;
 
+    //Usado para CADASTRAR um prestador novo (a senha vem em texto puro e vira hash)
+    public Prestador(int id, String nome, String email, String senha,
+                     String telefone, CriptografiaService criptografiaService,
+                     String profissao, String descricao, String cidade,
+                     double valorHora) {
+        this(id, nome, email, senha, telefone, criptografiaService,
+                profissao, descricao, cidade, valorHora, false);
+    }
+
+    //Usado para a persistencia dos dados no banco, USO EXCLUSIVO DO UsuarioDAO: carrega um prestador do banco.
     public Prestador(int id, String nome, String email, String senha, String telefone,
                      CriptografiaService criptografiaService,
-                     String profissao, String descricao, String cidade, double valorHora) {
-        super(id, nome, email, senha, telefone, criptografiaService);
+                     String profissao, String descricao, String cidade, double valorHora, boolean senhaJaCriptografada) {
+        super(id, nome, email, senha, telefone, criptografiaService, senhaJaCriptografada);
         this.profissao = profissao;
         this.descricao = descricao;
         this.cidade = cidade;
@@ -23,7 +33,6 @@ public class Prestador extends Usuario {
         this.servicos = new ArrayList<>();
         this.avaliacoesRecebidas = new ArrayList<>();
     }
-
 
     public String getProfissao() { return profissao; }
     public void setProfissao(String profissao) { this.profissao = profissao; }
