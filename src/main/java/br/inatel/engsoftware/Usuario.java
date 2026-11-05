@@ -1,4 +1,5 @@
 package br.inatel.engsoftware;
+import java.util.Objects;
 
 public abstract class Usuario {
 
@@ -21,6 +22,16 @@ public abstract class Usuario {
         this.senhaHash = this.criptografiaService.gerarHash(senha);
     }
 
+    protected Usuario(int id, String nome, String email, String senha, String telefone, CriptografiaService criptografiaService, boolean senhaJaCriptografada) {
+        this.id = id;
+        this.nome = nome;
+        this.email = email;
+        this.telefone = telefone;
+        this.criptografiaService = Objects.requireNonNull(criptografiaService);
+        this.senhaHash = senhaJaCriptografada
+                ? Objects.requireNonNull(senha)
+                : this.criptografiaService.gerarHash(senha);
+    }
 
     public int getId() { return id; }
 
@@ -35,6 +46,7 @@ public abstract class Usuario {
 
     public double getNotamedia() { return notamedia; }
 
+    public String getSenhaHash() { return senhaHash; }
 
     public boolean login(String emailDigitado, String senhaDigitada) {
         boolean emailCorreto = this.email.equals(emailDigitado);
@@ -66,4 +78,12 @@ public abstract class Usuario {
         System.out.println("Telefone: " + telefone);
         System.out.println("Nota: " + notamedia);
     }
+
+    public void definirIdPersistido(int id) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("ID inválido.");
+        }
+        this.id = id;
+    }
+
 }
