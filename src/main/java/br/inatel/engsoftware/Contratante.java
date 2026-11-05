@@ -9,9 +9,18 @@ public class Contratante extends Usuario {
     private String cidade;
     private List<Avaliacao> minhasAvaliacoes;
 
+    //Usado para CADASTRAR um contratante novo (a senha vem em texto puro e vira hash)
+    public Contratante(int id, String nome, String email, String senha,
+                       String telefone, CriptografiaService criptografiaService,
+                       String cidade) {
+        this(id, nome, email, senha, telefone,
+                criptografiaService, cidade, false);
+    }
+
+    //Usado para a persistencia dos dados no banco, USO EXCLUSIVO DO UsuarioDAO: carrega um contratante do banco.
     public Contratante(int id, String nome, String email, String senha, String telefone,
-                       CriptografiaService criptografiaService, String cidade) {
-        super(id, nome, email, senha, telefone, criptografiaService);
+                       CriptografiaService criptografiaService, String cidade, boolean senhaJaCriptografada) {
+        super(id, nome, email, senha, telefone, criptografiaService, senhaJaCriptografada );
         this.cidade = cidade;
         this.minhasAvaliacoes = new ArrayList<>();
     }
