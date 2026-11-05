@@ -78,4 +78,12 @@ public abstract class Usuario {
         System.out.println("Telefone: " + telefone);
         System.out.println("Nota: " + notamedia);
     }
+
+    public void definirIdPersistido(int id) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("ID inválido.");
+        }
+        this.id = id;
+    }
+
 }
