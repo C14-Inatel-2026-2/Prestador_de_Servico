@@ -1,4 +1,3 @@
-
 package br.inatel.engsoftware.dao;
 
 import br.inatel.engsoftware.Avaliacao;
@@ -6,6 +5,7 @@ import br.inatel.engsoftware.database.Conexao;
 import br.inatel.engsoftware.database.ConnectionFactory;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -26,7 +26,7 @@ public class AvaliacaoDAO {
     }
 
     // 1. INSERIR AVALIAÇÃO
-    // Retorna o ID gerado pelo MySQL.
+    // Salva a data informada na avaliação. Retorna o ID gerado pelo MySQL.
     public int inserir(Avaliacao avaliacao) throws SQLException {
 
         if (avaliacao == null) {
@@ -52,6 +52,11 @@ public class AvaliacaoDAO {
                     "A nota deve estar entre 1 e 5.");
         }
 
+        if (avaliacao.getData() == null) {
+            throw new IllegalArgumentException(
+                    "A data da avaliação é obrigatória.");
+        }
+
         if (avaliacao.getId() > 0) {
             throw new IllegalArgumentException(
                     "Esta avaliação já possui ID.");
@@ -59,8 +64,8 @@ public class AvaliacaoDAO {
 
         String sql = """
             INSERT INTO avaliacoes
-            (id_avaliador, id_avaliado, nota, comentario)
-            VALUES (?, ?, ?, ?)
+            (id_avaliador, id_avaliado, nota, comentario, data_avaliacao)
+            VALUES (?, ?, ?, ?, ?)
             """;
 
         try (Connection conn = connectionFactory.abrir();
@@ -71,6 +76,7 @@ public class AvaliacaoDAO {
             stmt.setInt(2, avaliacao.getIdAvaliado());
             stmt.setInt(3, avaliacao.getNota());
             stmt.setString(4, avaliacao.getComentario());
+            stmt.setObject(5, avaliacao.getData()); // LocalDate, sem hora
 
             int linhas = stmt.executeUpdate();
 
@@ -232,23 +238,27 @@ public class AvaliacaoDAO {
     private Avaliacao criarAvaliacao(ResultSet rs)
             throws SQLException {
 
-        Timestamp data = rs.getTimestamp("data_avaliacao");
+        LocalDate data = rs.getObject("data_avaliacao", LocalDate.class);
 
         if (data == null) {
             throw new SQLException(
                     "Avaliação sem data cadastrada.");
         }
 
-        return new Avaliacao(
-                rs.getInt("id_avaliacao"),
-                rs.getInt("id_avaliador"),
-                rs.getInt("id_avaliado"),
-                rs.getInt("nota"),
-                rs.getString("comentario"),
-                data.toLocalDateTime().toLocalDate()
-        );
+        try {
+            return new Avaliacao(
+                    rs.getInt("id_avaliacao"),
+                    rs.getInt("id_avaliador"),
+                    rs.getInt("id_avaliado"),
+                    rs.getInt("nota"),
+                    rs.getString("comentario"),
+                    data
+            );
+        } catch (IllegalArgumentException e) {
+            throw new SQLException(
+                    "Avaliação inválida no banco: " + e.getMessage(), e);
+        }
     }
-
 
     private void validarId(int id) {
         if (id <= 0) {
