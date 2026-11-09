@@ -9,14 +9,18 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.inatel.engsoftware.Prestador;
+import br.inatel.engsoftware.Usuario;
+
 public class ServicoDAO {
 
     private final ConnectionFactory connectionFactory;
 
+    public record ServicoPrestado(Servico servico, double precoCobrado) { }
+
     public ServicoDAO() {
         this(Conexao::conectar);
     }
-
     public ServicoDAO(ConnectionFactory connectionFactory) {
         this.connectionFactory =
                 java.util.Objects.requireNonNull(connectionFactory);
@@ -130,6 +134,138 @@ public class ServicoDAO {
             return stmt.executeUpdate() > 0;
         }
     }
+
+    // Associar prestador a um serviço
+    public void associarPrestador(int idPrestador, int idServico,
+                                  double precoCobrado) throws SQLException {
+
+        if (idPrestador <= 0 || idServico <= 0 ||
+                !Double.isFinite(precoCobrado) || precoCobrado < 0) {
+            throw new IllegalArgumentException("Dados inválidos.");
+        }
+
+        String sql = """
+            INSERT INTO prestador_servicos
+            (id_prestador, id_servico, preco_cobrado)
+            VALUES (?, ?, ?)
+            """;
+
+        try (Connection conn = connectionFactory.abrir();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idPrestador);
+            stmt.setInt(2, idServico);
+            stmt.setDouble(3, precoCobrado);
+
+            stmt.executeUpdate();
+        }
+    }
+
+
+    public List<Prestador> buscarPrestadoresPorServico(int idServico)
+            throws SQLException {
+
+        if (idServico <= 0) {
+            throw new IllegalArgumentException("ID inválido.");
+        }
+
+        List<Prestador> prestadores = new ArrayList<>();
+        UsuarioDAO usuarioDAO = new UsuarioDAO(connectionFactory);
+
+        String sql = """
+        SELECT id_prestador
+        FROM prestador_servicos
+        WHERE id_servico = ?
+        ORDER BY id_prestador
+        """;
+
+        try (Connection conn = connectionFactory.abrir();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idServico);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                while (rs.next()) {
+                    int idPrestador = rs.getInt("id_prestador");
+
+                    Usuario usuario = usuarioDAO.buscarPorId(idPrestador);
+
+                    if (usuario instanceof Prestador prestador) {
+                        prestadores.add(prestador);
+                    }
+                }
+            }
+        }
+
+        return prestadores;
+    }
+
+
+    // Listar serviços oferecidos por um prestador
+    public List<ServicoPrestado> listarServicosPorPrestador(int idPrestador)
+            throws SQLException {
+
+        if (idPrestador <= 0) {
+            throw new IllegalArgumentException("ID do prestador inválido.");
+        }
+
+        List<ServicoPrestado> servicos = new ArrayList<>();
+
+        String sql = """
+        SELECT s.id, s.nome, s.descricao, s.preco_sugerido, ps.preco_cobrado
+        FROM servicos s
+        INNER JOIN prestador_servicos ps
+            ON s.id = ps.id_servico
+        WHERE ps.id_prestador = ?
+        ORDER BY s.nome
+        """;
+
+        try (Connection conn = connectionFactory.abrir();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idPrestador);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    servicos.add(new ServicoPrestado(
+                            criarServico(rs),
+                            rs.getDouble("preco_cobrado")));
+                }
+            }
+        }
+
+        return servicos;
+    }
+
+
+
+    // Desassociar um prestador de um serviço
+    public boolean desassociarPrestador(int idPrestador, int idServico)
+            throws SQLException {
+
+        if (idPrestador <= 0 || idServico <= 0) {
+            throw new IllegalArgumentException("IDs inválidos.");
+        }
+
+        String sql = """
+        DELETE FROM prestador_servicos
+        WHERE id_prestador = ? AND id_servico = ?
+        """;
+
+        try (Connection conn = connectionFactory.abrir();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idPrestador);
+            stmt.setInt(2, idServico);
+
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+
+
+
 
     // Converter resultado SQL em objeto Java
     private Servico criarServico(ResultSet rs) throws SQLException {
