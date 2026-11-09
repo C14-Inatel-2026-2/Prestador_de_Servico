@@ -8,6 +8,11 @@ import org.mockito.Mockito;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+import java.sql.SQLException;
+import java.util.List;
+
+import br.inatel.engsoftware.dao.ServicoDAO;
+
 import static org.mockito.Mockito.*;
 
 public class ContratanteTest {
@@ -50,6 +55,31 @@ public class ContratanteTest {
     void testeBuscarPrestadorRetornaListaVazia(){
         Assertions.assertTrue(contratante.buscarPrestador("Encanador").isEmpty());
     }
+
+
+    @Test
+    void testeBuscarPrestadorPorProfissao() throws SQLException {
+
+        ServicoDAO servicoDAOMock = mock(ServicoDAO.class);
+
+        when(servicoDAOMock.buscarPrestadores("Carpinteiro"))
+                .thenReturn(List.of(prestador));
+
+        contratante.definirServicoDAO(servicoDAOMock);
+
+        List<Prestador> resultado =
+                contratante.buscarPrestador("Carpinteiro");
+
+        Assertions.assertEquals(1, resultado.size());
+        Assertions.assertEquals(
+                "Paulo Ricardo Alvez",
+                resultado.get(0).getNome()
+        );
+
+        verify(servicoDAOMock).buscarPrestadores("Carpinteiro");
+    }
+
+
 
     @Test
     void testeListarMinhasAvaliacoesRetornaListaVazia(){
