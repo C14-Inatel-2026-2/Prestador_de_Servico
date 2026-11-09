@@ -161,7 +161,7 @@ public class ServicoDAO {
         }
     }
 
-
+    //Buscar prestador por serviço
     public List<Prestador> buscarPrestadoresPorServico(int idServico)
             throws SQLException {
 
@@ -201,6 +201,67 @@ public class ServicoDAO {
         return prestadores;
     }
 
+
+    // Buscar prestadores por nome, profissão, cidade ou serviço
+    public List<Prestador> buscarPrestadores(String termo)
+            throws SQLException {
+
+        if (termo == null || termo.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Informe um termo para pesquisa.");
+        }
+
+        List<Integer> ids = new ArrayList<>();
+        List<Prestador> prestadores = new ArrayList<>();
+
+        String sql = """
+        SELECT p.id_usuario
+        FROM prestadores p
+        INNER JOIN usuarios u
+            ON u.id_usuario = p.id_usuario
+        WHERE LOWER(u.nome) LIKE ?
+           OR LOWER(p.profissao) LIKE ?
+           OR LOWER(p.cidade) LIKE ?
+           OR EXISTS (
+               SELECT 1
+               FROM prestador_servicos ps
+               INNER JOIN servicos s
+                   ON s.id = ps.id_servico
+               WHERE ps.id_prestador = p.id_usuario
+                 AND LOWER(s.nome) LIKE ?
+           )
+        ORDER BY u.nome
+        """;
+
+        String pesquisa = "%" + termo.trim().toLowerCase(
+                java.util.Locale.ROOT) + "%";
+
+        try (Connection conn = connectionFactory.abrir();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            for (int i = 1; i <= 4; i++) {
+                stmt.setString(i, pesquisa);
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    ids.add(rs.getInt("id_usuario"));
+                }
+            }
+        }
+
+        UsuarioDAO usuarioDAO = new UsuarioDAO(connectionFactory);
+
+        for (int id : ids) {
+            Usuario usuario = usuarioDAO.buscarPorId(id);
+
+            if (usuario instanceof Prestador prestador) {
+                prestadores.add(prestador);
+            }
+        }
+
+        return prestadores;
+    }
 
     // Listar serviços oferecidos por um prestador
     public List<ServicoPrestado> listarServicosPorPrestador(int idPrestador)
