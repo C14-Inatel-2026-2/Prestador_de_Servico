@@ -15,7 +15,7 @@ public class Contratante extends Usuario {
 
     //Permite injeção de um DAO simulado
     private ServicoDAO servicoDAO = new ServicoDAO();
-    public void definirServicoDAO(ServicoDAO servicoDAO) {
+    public void definirServicoDAO(ServicoDAO servicoDAO){
         this.servicoDAO = Objects.requireNonNull(servicoDAO);
     }
 
