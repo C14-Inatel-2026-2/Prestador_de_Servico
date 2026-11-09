@@ -41,11 +41,11 @@
             <version>0.4</version>
         </dependency>
 
-        <!-- Source: https://mvnrepository.com/artifact/com.mysql/mysql-connector-j -->
+
         <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>26.10.0</version>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.2</version>
         </dependency>
 
     </dependencies>

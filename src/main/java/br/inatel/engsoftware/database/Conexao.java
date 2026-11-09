@@ -1,4 +1,3 @@
-
 package br.inatel.engsoftware.database;
 
 import java.sql.Connection;
@@ -20,13 +19,17 @@ public class Conexao {
     }
 
     public static Connection conectar() throws SQLException {
+        // Registra explicitamente o driver do PostgreSQL para o ambiente em nuvem
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("Driver do PostgreSQL não encontrado. Verifique o pom.xml.", e);
+        }
 
         String url = obterObrigatoria("DB_URL");
         String usuario = obterObrigatoria("DB_USER");
         String senha = obterObrigatoria("DB_PASSWORD");
 
-        return DriverManager.getConnection(
-                url, usuario, senha
-        );
+        return DriverManager.getConnection(url, usuario, senha);
     }
 }
