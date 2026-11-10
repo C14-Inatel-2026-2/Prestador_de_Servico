@@ -241,7 +241,6 @@ public class Prestador extends Usuario {
         }
 
         try {
-            //Criar a avaliação
             Avaliacao avaliacao = new Avaliacao(
                     0,
                     this.getId(),
@@ -253,8 +252,6 @@ public class Prestador extends Usuario {
 
             // Salvar no banco e recuperar o ID
             int idGerado = avaliacaoDAO.inserir(avaliacao);
-            contratante.calcularEAtualizarMedia();
-
             return new Avaliacao(
                     idGerado,
                     avaliacao.getIdAutor(),

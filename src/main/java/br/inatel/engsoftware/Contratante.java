@@ -75,9 +75,7 @@ public class Contratante extends Usuario {
                     avaliacao.getComentario(),
                     avaliacao.getData()
             );
-            prestador.receberAvaliacao(avaliacaoSalva);
             return avaliacaoSalva;
-
         }catch (SQLException e) {
             throw new IllegalStateException(
                     "Erro ao salvar avaliação no banco de dados.", e);
