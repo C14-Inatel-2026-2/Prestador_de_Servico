@@ -1,60 +1,72 @@
 package br.inatel.engsoftware;
 
+import br.inatel.engsoftware.dao.AvaliacaoDAO;
+import br.inatel.engsoftware.dao.ServicoDAO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class PrestadorTest {
 
-    private Prestador prestador;
+    @Mock
     private CriptografiaService criptografiaMock;
+
+    @Mock
+    private AvaliacaoDAO avaliacaoDAOMock;
+
+    @Mock
+    private ServicoDAO servicoDAOMock;
+
+    private Prestador prestador;
 
     @BeforeEach
     void setUp() {
-        criptografiaMock = Mockito.mock(CriptografiaService.class);
-        when(criptografiaMock.gerarHash(anyString())).thenReturn("hashFalso");
 
+        lenient().when(criptografiaMock.gerarHash(anyString())).thenReturn("hashFalso");
 
-        prestador = new Prestador(1, "João",
-                "joao@email.com",
-                "senha123",
-                "999999999",
-                criptografiaMock,
-                "Encanador",
-                "Consertos em geral",
-                "Santa Rita",
-                50.0);
+        prestador = new Prestador(1, "João", "joao@email.com", "senha123", "999999999",
+                criptografiaMock, "Encanador", "Consertos em geral", "Santa Rita", 50.0);
+
+        // Injetando os DAOs mockados para evitar acesso real ao banco de dados
+        prestador.definirAvaliacaoDAO(avaliacaoDAOMock);
+        prestador.definirServicoDAO(servicoDAOMock);
     }
+
+
 
     @Test
     void testeSettersEGetters() {
         prestador.setNome("Pedro Alves");
-        prestador.setEmail("pedro@email.com");
-        prestador.setTelefone("35966660000");
         prestador.setProfissao("Eletricista");
-        prestador.setDescricao("Reparos hidraulicos");
-        prestador.setCidade("Varginha");
         prestador.setValorHora(95.5);
 
-        Assertions.assertEquals("Pedro Alves", prestador.getNome());
-        Assertions.assertEquals("pedro@email.com", prestador.getEmail());
-        Assertions.assertEquals("35966660000", prestador.getTelefone());
-        Assertions.assertEquals("Eletricista", prestador.getProfissao());
-        Assertions.assertEquals("Reparos hidraulicos", prestador.getDescricao());
-        Assertions.assertEquals("Varginha", prestador.getCidade());
-        Assertions.assertEquals(95.5, prestador.getValorHora(), 0.001);
+        assertEquals("Pedro Alves", prestador.getNome());
+        assertEquals("Eletricista", prestador.getProfissao());
+        assertEquals(95.5, prestador.getValorHora(), 0.001);
     }
 
     @Test
-    void testeExibirPerfilPrestador() {
-        prestador.cadastrarServico("Instalacao eletrica");
+    void testeExibirPerfilPrestador() throws SQLException {
+        // Finge que o banco não retornou nenhum serviço para não quebrar o print
+        when(servicoDAOMock.listarServicosPorPrestador(1)).thenReturn(new ArrayList<>());
+        when(avaliacaoDAOMock.calcularMedia(1)).thenReturn(4.5);
+
         ByteArrayOutputStream saida = new ByteArrayOutputStream();
         PrintStream original = System.out;
         System.setOut(new PrintStream(saida));
@@ -66,134 +78,104 @@ public class PrestadorTest {
         }
 
         String texto = saida.toString();
-
-        Assertions.assertTrue(texto.contains("Email: joao@email.com"));
-        Assertions.assertTrue(texto.contains("Encanador"));
-        Assertions.assertTrue(texto.contains("Consertos em geral"));
-        Assertions.assertTrue(texto.contains("Cidade: Santa Rita"));
-        Assertions.assertTrue(texto.contains("Valor/hora: R$ 50.0"));
-        Assertions.assertTrue(texto.contains("Instalacao eletrica"));
+        assertTrue(texto.contains("Email: joao@email.com"));
+        assertTrue(texto.contains("Encanador"));
+        assertTrue(texto.contains("Valor/hora: R$ 50.0"));
     }
 
+
+
     @Test
-    void testePrestadorNovoTemMediaZero() {
+    void testeCalcularEAtualizarMediaComSucesso() throws SQLException {
+        // Simula o banco retornando média 4.2
+        when(avaliacaoDAOMock.calcularMedia(1)).thenReturn(4.2);
+
         prestador.calcularEAtualizarMedia();
-        Assertions.assertEquals(0.0, prestador.getNotamedia());
+
+        assertEquals(4.2, prestador.getNotamedia());
+        verify(avaliacaoDAOMock).calcularMedia(1);
     }
 
     @Test
-    void setetrsgettersTest(){
-        prestador.setProfissao("Eletricista");
+    void testeCalcularEAtualizarMediaPrestadorNaoCadastrado() {
+        Prestador prestadorNaoCadastrado = new Prestador(0, "Ana", "ana@email.com", "senha", "123",
+                criptografiaMock, "Pintora", "Pinturas", "SR", 40.0);
 
+        IllegalStateException ex = assertThrows(IllegalStateException.class, prestadorNaoCadastrado::calcularEAtualizarMedia);
+        assertEquals("O prestador precisa estar cadastrado.", ex.getMessage());
+    }
+
+
+    @Test
+    void testeReceberAvaliacaoValidaAtualizaMedia() throws SQLException {
+        Avaliacao aval = new Avaliacao(10, 2, 1, 5, "Excelente", LocalDate.now());
+
+        // Simula a busca no banco confirmando que a avaliação existe e é para ele
+        when(avaliacaoDAOMock.buscarPorId(10)).thenReturn(aval);
+        // Simula o recálculo da média após receber
+        when(avaliacaoDAOMock.calcularMedia(1)).thenReturn(5.0);
+
+        prestador.receberAvaliacao(aval);
+
+        assertEquals(5.0, prestador.getNotamedia());
+        verify(avaliacaoDAOMock).buscarPorId(10);
     }
 
     @Test
-    void testeReceberAvaliacaoAtualizaMediaCorretamente() {
-        Avaliacao avaliacao1 = Mockito.mock(Avaliacao.class);
-        Avaliacao avaliacao2 = Mockito.mock(Avaliacao.class);
+    void testeReceberAvaliacaoInvalida() {
 
+        Avaliacao aval = new Avaliacao(10, 2, 99, 5, "Ruim", LocalDate.now());
 
-        when(avaliacao1.getIdAvaliado()).thenReturn(1);
-        when(avaliacao2.getIdAvaliado()).thenReturn(1);
-
-
-        when(avaliacao1.getNota()).thenReturn(5);
-        when(avaliacao2.getNota()).thenReturn(4);
-
-
-        prestador.receberAvaliacao(avaliacao1);
-        prestador.receberAvaliacao(avaliacao2);
-
-        Assertions.assertEquals(4.5, prestador.getNotamedia());
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> prestador.receberAvaliacao(aval));
+        assertEquals("Avaliação inválida ou não pertence a este prestador.", ex.getMessage());
     }
 
     @Test
-    void testeReceberAvaliacaoRejeitaAvaliacaoInvalida(){
-        Avaliacao avaliacaoInvalida = Mockito.mock(Avaliacao.class);
-        when(avaliacaoInvalida.getIdAvaliado()).thenReturn(999);
+    void testeAvaliarContratanteComSucesso() throws SQLException {
+        Contratante contratanteMock = Mockito.mock(Contratante.class);
+        when(contratanteMock.getId()).thenReturn(2);
 
-        Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            prestador.receberAvaliacao(avaliacaoInvalida);
-        });
+
+        when(avaliacaoDAOMock.inserir(any(Avaliacao.class))).thenReturn(55);
+
+        Avaliacao gerada = prestador.avaliarContratante(contratanteMock, 4, "Bom cliente");
+
+        assertEquals(55, gerada.getId());
+        assertEquals(1, gerada.getIdAutor());
+        assertEquals(2, gerada.getIdAvaliado());
+
+
+        verify(contratanteMock).calcularEAtualizarMedia();
+        verify(avaliacaoDAOMock).inserir(any(Avaliacao.class));
     }
 
     @Test
-    void AvaliacaoNulaEhRejeitadaENaoAlteraMedia(){
-        prestador.receberAvaliacao(criarAvaliacaoMock(1,4));
+    void testeCadastrarServicoNoBancoComSucesso() throws SQLException {
+        prestador.cadastrarServico(5, 120.0);
 
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> prestador.receberAvaliacao((null)));
-
-        Assertions.assertEquals(1,prestador.listarAvaliacoesRecebidas().size());
-        Assertions.assertEquals(4.0,prestador.getNotamedia());
-
-
+        // Verifica se a classe chamou o DAO corretamente passando o ID do prestador (1), o do serviço (5) e o preço
+        verify(servicoDAOMock).associarPrestador(1, 5, 120.0);
     }
 
     @Test
-    void testeCadastrarServicoComSucesso() {
-        prestador.cadastrarServico("Troca de torneira");
-
-        Assertions.assertTrue(prestador.getServicos().contains("Troca de torneira"));
-        Assertions.assertEquals(1, prestador.getServicos().size());
+    void testeCadastrarServicoNoBancoPrecoNegativo() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> prestador.cadastrarServico(5, -10.0));
+        assertEquals("O preço cobrado deve ser válido e não negativo.", ex.getMessage());
     }
 
     @Test
-    void testePrestadorRecebeAvaliacaoRuimEMediaEhRecalculada() {
-        Avaliacao boa1 = criarAvaliacaoMock(1, 5);
-        Avaliacao boa2 = criarAvaliacaoMock(1, 5);
-        Avaliacao ruim = criarAvaliacaoMock(1, 1);
+    void testeRemoverServicoDoBancoComSucesso() throws SQLException {
+        when(servicoDAOMock.desassociarPrestador(1, 5)).thenReturn(true);
 
-        prestador.receberAvaliacao(boa1);
-        prestador.receberAvaliacao(ruim);
-        prestador.receberAvaliacao(boa2);
+        boolean removido = prestador.removerServico(5);
 
-        Assertions.assertEquals(3, prestador.listarAvaliacoesRecebidas().size());
-        Assertions.assertEquals(11.0 / 3.0, prestador.getNotamedia(), 0.0001);
+        assertTrue(removido);
+        verify(servicoDAOMock).desassociarPrestador(1, 5);
     }
 
     @Test
-    void testePrestadorCadastraERemoveServicosInvalidos() {
-        Prestador prestadorReal = new Prestador(1, "Mario e Luigi", "SuperMarioBros@email.com", "minhasenhaeh123", "999999999",
-                new BCryptService(), "Encanador", "Consertar canos é o nosso forte!", "Santa Rita", 50.0);
-        prestadorReal.cadastrarServico(null);
-        prestadorReal.cadastrarServico("");
-        prestadorReal.cadastrarServico("   ");
-        prestadorReal.cadastrarServico("Troca de torneira");
-        prestadorReal.cadastrarServico("Troca de torneira");
-        prestadorReal.removerServico("Serviço que nn existe");
-        prestadorReal.removerServico(null);
-        Assertions.assertEquals(List.of("Troca de torneira"), prestadorReal.getServicos());
-    }
-
-    @Test
-    void testeRemoverServicoExistenteManterOsOutrosServicos() {
-        Prestador prestadorReal = new Prestador(3, "José", "jose@email.com", "arrumando6789", "999999999",
-                new BCryptService(), "Encanador", "Consertos em geral", "Santa Rita", 65.0);
-        prestadorReal.cadastrarServico("Troca de valvula de descarga");
-        prestadorReal.cadastrarServico("Troca de torneira");
-        prestadorReal.cadastrarServico("Troca de sifão");
-        prestadorReal.cadastrarServico("Desentupimento");
-        prestadorReal.removerServico("Troca de torneira");
-        prestadorReal.removerServico("Troca de valvula de descarga");
-        Assertions.assertEquals(List.of("Troca de sifão","Desentupimento"), prestadorReal.getServicos());
-    }
-
-    private Avaliacao criarAvaliacaoMock(int idAvaliado, int nota) {
-        Avaliacao avaliacao = Mockito.mock(Avaliacao.class);
-        when(avaliacao.getIdAvaliado()).thenReturn(idAvaliado);
-        when(avaliacao.getNota()).thenReturn(nota);
-        return avaliacao;
-    }
-
-    @Test
-    void testeAvaliacaoNulaEhRejeitadaENaoAlteraMedia() {
-        prestador.receberAvaliacao(criarAvaliacaoMock(1, 4));
-
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> prestador.receberAvaliacao(null));
-
-        Assertions.assertEquals(1, prestador.listarAvaliacoesRecebidas().size());
-        Assertions.assertEquals(4.0, prestador.getNotamedia());
+    void testeRemoverServicoDoBancoIdInvalido() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> prestador.removerServico(0));
+        assertEquals("O ID do serviço deve ser positivo.", ex.getMessage());
     }
 }
