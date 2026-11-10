@@ -113,19 +113,18 @@ public class ContratanteTest {
     }
 
     @Test
-    void testeAvaliarUsuarioComMesmoId(){
+    void testeAvaliarUsuarioComMesmoIdLancaExcecao(){
         prestador = new Prestador(2,"Paulo Ricardo Alvez",
                 "Paulo@gmail.com","8756985",
                 "95555-5555", criptografiaMock, "Carpinteiro",
                 "Faço carpintaria a mais de 25 anos, sou o senhor responsavel e trabalhador, caso precisem dos meus serviços estou a disposição!",
                 "Cachoeira de Minas",34.8);
 
-        contratante = new Contratante(2,"Roberto Carlos da Siva","roberto@gmail.com","1234567",
-                "98888-8888",criptografiaMock,"Santa Rita do Sapucai");
-
-        Avaliacao idIgual = contratante.avaliarUsuario(prestador,5,"Muito bom");
-        Assertions.assertNull(idIgual);
+        IllegalArgumentException erro = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> contratante.avaliarUsuario(prestador, 5, "Muito bom"));
+        Assertions.assertTrue(erro.getMessage().contains("Um usuário não pode avaliar a si mesmo"));
     }
+
     @Test
     void testeContratanteComNotaAbsurdaNaoGeraAvaliacao() {
         Prestador prestadorMock = Mockito.mock(Prestador.class);
