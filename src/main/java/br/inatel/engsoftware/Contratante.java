@@ -53,17 +53,21 @@ public class Contratante extends Usuario {
         }
     }
 
-    public Avaliacao avaliarUsuario(Usuario avaliado, int nota, String comentario) {
-        if (avaliado == null) {
-            return null; // Protege contra NullPointerException
+    public Avaliacao avaliarUsuario(Prestador prestador, int nota, String comentario) {
+        if (prestador == null) {
+            throw new IllegalArgumentException("O prestador não pode ser nulo.");
+        }
+        if (this.getId() <= 0 || prestador.getId() <= 0) {
+            throw new IllegalArgumentException(
+                    "Os usuários precisam estar cadastrados.");
         }
 
         try {
             // Tenta criar a avaliação. Se a nota for -1 ou 1000, a classe da sua colega vai estourar um erro aqui.
-            Avaliacao avaliacao = new Avaliacao(0, this.getId(), avaliado.getId(), nota, comentario, LocalDate.now());
+            Avaliacao avaliacao = new Avaliacao(0, this.getId(), prestador.getId(), nota, comentario, LocalDate.now());
 
             int idGerado = avaliacaoDAO.inserir(avaliacao);
-            return new Avaliacao(
+            Avaliacao avaliacaoSalva = new Avaliacao(
                     idGerado,
                     avaliacao.getIdAutor(),
                     avaliacao.getIdAvaliado(),
@@ -71,16 +75,16 @@ public class Contratante extends Usuario {
                     avaliacao.getComentario(),
                     avaliacao.getData()
             );
+            prestador.receberAvaliacao(avaliacaoSalva);
+            return avaliacaoSalva;
 
-        } catch (IllegalArgumentException e){
-            return null;
         }catch (SQLException e) {
             throw new IllegalStateException(
                     "Erro ao salvar avaliação no banco de dados.", e);
         }
 
-
     }
+
 
     public List<Avaliacao> listarMinhasAvaliacoes() {
         try {
@@ -93,10 +97,39 @@ public class Contratante extends Usuario {
     }
     @Override
     public void exibirPerfil() {
+        if (this.getId() > 0) {
+            calcularEAtualizarMedia();
+        }
         super.exibirPerfil();
         System.out.println("Cidade: " + cidade);
     }
+    public void calcularEAtualizarMedia() {
 
+        if (this.getId() <= 0) {
+            throw new IllegalStateException(
+                    "O contratante precisa estar cadastrado.");
+        }
 
+        try {
+            double media = avaliacaoDAO.calcularMedia(this.getId());
+
+            super.atualizarNotaMedia(media);
+
+        } catch (SQLException e) {
+            throw new IllegalStateException(
+                    "Erro ao calcular a média do contratante.", e);
+        }
+    }
+
+    // Listar avaliações recebidas pelo contratante
+    public List<Avaliacao> listarAvaliacoesRecebidas() {
+        try {
+            return avaliacaoDAO.listarPorAvaliado(this.getId());
+
+        } catch (SQLException e) {
+            throw new IllegalStateException(
+                    "Erro ao consultar avaliações recebidas.", e);
+        }
+    }
 
 }

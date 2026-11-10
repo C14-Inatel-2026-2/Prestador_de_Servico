@@ -56,6 +56,37 @@ public class ServicoDAO {
             }
         }
     }
+    public List<Servico> buscarServicoPorNome(String nome)
+            throws SQLException {
+
+        if (nome == null || nome.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Informe o nome do serviço.");
+        }
+
+        List<Servico> servicos = new ArrayList<>();
+
+        String sql = """
+        SELECT id, nome, descricao, preco_sugerido
+        FROM servicos
+        WHERE nome ILIKE ?
+        ORDER BY nome
+        """;
+
+        try (Connection conn = connectionFactory.abrir();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, "%" + nome.trim() + "%");
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    servicos.add(criarServico(rs));
+                }
+            }
+        }
+
+        return servicos;
+    }
 
     // Buscar serviço pelo ID
     public Servico buscarPorId(int id) throws SQLException {
