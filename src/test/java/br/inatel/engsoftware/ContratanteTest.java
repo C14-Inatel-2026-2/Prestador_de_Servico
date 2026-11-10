@@ -39,10 +39,10 @@ public class ContratanteTest {
     }
 
     @Test
-    void testeAvaliarUsuarioNuloRetornaNull(){
-        Avaliacao resultado = contratante.avaliarUsuario(null,5,
-                "Muito bom");
-        Assertions.assertNull(resultado);
+    void testeAvaliarUsuarioNuloLancaExcecao(){
+        IllegalArgumentException erro = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> contratante.avaliarUsuario(null, 5, "Muito bom"));
+        Assertions.assertEquals("O prestador não pode ser nulo.", erro.getMessage());
     }
 
     @Test
