@@ -40,6 +40,7 @@ pipeline {
         }
 
         stage('Deploy') {
+            when { branch 'main' }
             steps {
                 script {
                     // Aciona o webhook do Render para fazer o deploy na nuvem automaticamente
@@ -47,16 +48,14 @@ pipeline {
                         echo "Gatilho do Render detectado! Avisando a nuvem para iniciar o deploy da nova versão..."
 
                         if (isUnix()) {
-                            sh "curl -X POST ${env.RENDER_DEPLOY_HOOK}"
+                            sh "curl -fsS -X POST ${env.RENDER_DEPLOY_HOOK}"
                         } else {
-
-                            bat "curl -X POST ${env.RENDER_DEPLOY_HOOK}"
+                            bat "curl -fsS -X POST ${env.RENDER_DEPLOY_HOOK}"
                         }
 
                         echo "Sinal de deploy enviado com sucesso. O Render construirá a imagem a partir do Dockerfile."
                     } else {
-                        echo "Variável RENDER_DEPLOY_HOOK não configurada neste Jenkins."
-                        echo "Deploy no Render pulado (Pipeline finalizada apenas com testes)."
+                        error "Variável RENDER_DEPLOY_HOOK não configurada neste Jenkins."
                     }
                 }
             }
