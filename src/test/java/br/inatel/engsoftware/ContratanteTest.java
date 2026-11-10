@@ -106,9 +106,10 @@ public class ContratanteTest {
     }
 
     @Test
-    void testeReceberNotaInvalidaAvaliacao(){
-        Avaliacao notaInvalida = contratante.avaliarUsuario(prestador,-1,"Muito bom");
-        Assertions.assertNull(notaInvalida);
+    void testeAvaliarUsuarioComNotaInvalidaLancaExcecao(){
+        IllegalArgumentException erro = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> contratante.avaliarUsuario(prestador, -1, "Muito bom"));
+        Assertions.assertTrue(erro.getMessage().contains("Nota deve estar entre 1 e 5"));
     }
 
     @Test
