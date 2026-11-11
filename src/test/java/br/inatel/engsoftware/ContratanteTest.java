@@ -15,10 +15,14 @@ import br.inatel.engsoftware.dao.ServicoDAO;
 
 import static org.mockito.Mockito.*;
 
+import br.inatel.engsoftware.dao.AvaliacaoDAO;
+
 public class ContratanteTest {
     private Prestador prestador;
     private Contratante contratante;
     private CriptografiaService criptografiaMock;
+    private AvaliacaoDAO avaliacaoDAOMock;
+    private ServicoDAO servicoDAOMock;
 
     @BeforeEach
     void setUp() {
@@ -36,6 +40,10 @@ public class ContratanteTest {
                 "roberto@gmail.com","1234567",
                 "98888-8888",criptografiaMock,
                 "Santa Rita do Sapucai");
+        avaliacaoDAOMock = mock(AvaliacaoDAO.class);
+        servicoDAOMock = mock(ServicoDAO.class);
+        contratante.definirAvaliacaoDAO(avaliacaoDAOMock);
+        contratante.definirServicoDAO(servicoDAOMock);
     }
 
     @Test
@@ -136,19 +144,22 @@ public class ContratanteTest {
     }
 
     @Test
-    void testeContratanteAvaliaUsuarioCorretamente(){
-        Prestador prestadorMock = Mockito.mock(Prestador.class); when(prestadorMock.getId()).thenReturn(8);
-        Avaliacao avaliacao = contratante.avaliarUsuario(prestadorMock, 5, "Cliente satisfeito e serviço realizado sem problemas.");
-
-        Assertions.assertNotNull(avaliacao);
+    void testeAvaliarUsuarioValidoSalvaNoBancoEEntregaAoPrestador() throws SQLException {
+        when(avaliacaoDAOMock.inserir(any(Avaliacao.class))).thenReturn(10);
+        Prestador prestadorMock = Mockito.mock(Prestador.class);
+        when(prestadorMock.getId()).thenReturn(8);
+        Avaliacao avaliacao = contratante.avaliarUsuario(prestadorMock, 5,
+                "Cliente satisfeito e serviço realizado sem problemas.");
         Assertions.assertAll(
+                () -> Assertions.assertEquals(10, avaliacao.getId()),
                 () -> Assertions.assertEquals(2, avaliacao.getIdAutor()),
                 () -> Assertions.assertEquals(8, avaliacao.getIdAvaliado()),
                 () -> Assertions.assertEquals(5, avaliacao.getNota()),
                 () -> Assertions.assertEquals("Cliente satisfeito e serviço realizado sem problemas.", avaliacao.getComentario()),
                 () -> Assertions.assertNotNull(avaliacao.getData())
         );
-
+        verify(avaliacaoDAOMock, times(1)).inserir(any(Avaliacao.class));
+        verify(prestadorMock, times(1)).receberAvaliacao(any(Avaliacao.class));
     }
 
     @Test
