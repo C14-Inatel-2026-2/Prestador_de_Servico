@@ -49,7 +49,6 @@ public class PrestadorTest {
     }
 
 
-
     @Test
     void testeSettersEGetters() {
         prestador.setNome("Pedro Alves");
@@ -82,7 +81,6 @@ public class PrestadorTest {
         assertTrue(texto.contains("Encanador"));
         assertTrue(texto.contains("Valor/hora: R$ 50.0"));
     }
-
 
 
     @Test
@@ -178,4 +176,40 @@ public class PrestadorTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> prestador.removerServico(0));
         assertEquals("O ID do serviço deve ser positivo.", ex.getMessage());
     }
+
+    @Test
+    void testeCadastrarEListarServicosPrestador() throws SQLException {
+        Prestador p = new Prestador(1, "Carlos", "carlos@inatel.br", "123", "99999", criptografiaMock, "Eletricista", "Instalações", "Santa Rita", 50.0);
+
+        ServicoDAO servicoDAOMock = mock(ServicoDAO.class);
+        p.definirServicoDAO(servicoDAOMock);
+
+        p.cadastrarServico(10, 150.0);
+        p.setDescricao("Nova descrição de eletricista");
+
+        Assertions.assertEquals("Nova descrição de eletricista", p.getDescricao());
+        Assertions.assertNotNull(p.getServicos());
+
+        verify(servicoDAOMock, times(1)).associarPrestador(anyInt(), anyInt(), anyDouble());
+    }
+
+    @Test
+    void testeCadastrarServicoPorNomeStringValidoEInvalido() {
+        Prestador p = new Prestador(1, "Carlos", "carlos@inatel.br", "123", "99999",
+                criptografiaMock, "Eletricista", "Instalações", "Santa Rita", 50.0);
+
+
+        p.cadastrarServico("Manutenção Elétrica");
+        Assertions.assertEquals(1, p.getServicos().size());
+
+
+        p.cadastrarServico("Manutenção Elétrica");
+        Assertions.assertEquals(1, p.getServicos().size());
+
+
+        p.cadastrarServico(null);
+        p.cadastrarServico("   ");
+        Assertions.assertEquals(1, p.getServicos().size());
+    }
+
 }

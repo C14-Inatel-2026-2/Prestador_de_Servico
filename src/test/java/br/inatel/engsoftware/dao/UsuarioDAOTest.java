@@ -207,4 +207,51 @@ class UsuarioDAOTest {
         assertTrue(atualizado);
         verify(connectionMock).commit();
     }
+
+    @Test
+    void deveBuscarUsuarioPorEmailComSucesso() throws SQLException {
+        when(connectionMock.prepareStatement(anyString())).thenReturn(stmtMock);
+        when(stmtMock.executeQuery()).thenReturn(rsMock);
+        when(rsMock.next()).thenReturn(true);
+
+        when(rsMock.getInt("id_usuario")).thenReturn(1);
+        when(rsMock.getString("nome")).thenReturn("Carlos");
+        when(rsMock.getString("email")).thenReturn("carlos@email.com");
+        when(rsMock.getString("senha_hash")).thenReturn("hash");
+        when(rsMock.getString("telefone")).thenReturn("123");
+        when(rsMock.getString("cidade")).thenReturn("Santa Rita");
+        when(rsMock.getString("tipo")).thenReturn("CONTRATANTE");
+        when(rsMock.getInt("perfil_contratante")).thenReturn(1);
+        when(rsMock.wasNull()).thenReturn(false);
+
+        Usuario encontrado = usuarioDAO.buscarPorEmail("carlos@email.com");
+
+        assertNotNull(encontrado);
+        assertEquals("carlos@email.com", encontrado.getEmail());
+    }
+
+    @Test
+    void deveBuscarUsuariosPorNomeComSucesso() throws SQLException {
+        when(connectionMock.prepareStatement(anyString())).thenReturn(stmtMock);
+        when(stmtMock.executeQuery()).thenReturn(rsMock);
+        when(rsMock.next()).thenReturn(true, false); // Retorna 1 item e depois para
+
+        when(rsMock.getInt("id_usuario")).thenReturn(1);
+        when(rsMock.getString("nome")).thenReturn("Carlos");
+        when(rsMock.getString("email")).thenReturn("carlos@email.com");
+        when(rsMock.getString("senha_hash")).thenReturn("hash");
+        when(rsMock.getString("telefone")).thenReturn("123");
+        when(rsMock.getString("cidade")).thenReturn("Santa Rita");
+        when(rsMock.getString("tipo")).thenReturn("CONTRATANTE");
+        when(rsMock.getInt("perfil_contratante")).thenReturn(1);
+        when(rsMock.wasNull()).thenReturn(false);
+
+        List<Usuario> encontrados = usuarioDAO.buscarPorNome("Carlos");
+
+        assertNotNull(encontrados);
+        assertFalse(encontrados.isEmpty());
+        assertEquals("Carlos", encontrados.get(0).getNome());
+    }
+
+
 }
