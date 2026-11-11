@@ -1,5 +1,6 @@
 package br.inatel.engsoftware;
 
+import br.inatel.engsoftware.dao.AvaliacaoDAO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,19 +14,25 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.List;
+
 class Usuariobase extends Usuario {
-    public Usuariobase(int id, String nome, String email, String senha, String telefone, CriptografiaService criptografiaService) {
-        super(id, nome, email, senha, telefone, criptografiaService);
+    public Usuariobase(int id, String nome, String email, String senha, String telefone, CriptografiaService criptografiaService,String cidade) {
+        super(id, nome, email, senha, telefone, criptografiaService,cidade);
     }
 }
 
 public class UsuarioTest {
     private Usuario usuario;
     private CriptografiaService criptografiaMock;
+    private AvaliacaoDAO avaliacaoDAOMock;
 
     @BeforeEach
     void setUp() {
         criptografiaMock = Mockito.mock(CriptografiaService.class);
+        avaliacaoDAOMock = Mockito.mock(AvaliacaoDAO.class);
 
 
         when(criptografiaMock.gerarHash("senha123")).thenReturn("hashFalso123");
@@ -34,7 +41,10 @@ public class UsuarioTest {
                 "Gabriel",
                 "gabriel@inatel.br",
                 "senha123",
-                "999999999", criptografiaMock);
+                "999999999", criptografiaMock,
+                "Santa Rita do Sapucaí");
+
+        usuario.definirAvaliacaoDAO(avaliacaoDAOMock);
     }
 
     @Test
@@ -154,6 +164,91 @@ public class UsuarioTest {
 
         Assertions.assertTrue(usuario.login("gabriel@inatel.br", "novaSenha456"));
         Assertions.assertFalse(usuario.login("gabriel@inatel.br", "senha123"));
+    }
+
+    @Test
+    void testeGetESetCidade() {
+        Assertions.assertEquals("Santa Rita do Sapucaí", usuario.getCidade());
+        usuario.setCidade("Itajubá");
+        Assertions.assertEquals("Itajubá", usuario.getCidade());
+    }
+
+    @Test
+    void testeDefinirIdPersistido() {
+        usuario.definirIdPersistido(10);
+        Assertions.assertEquals(10, usuario.getId());
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            usuario.definirIdPersistido(0);
+        });
+    }
+
+    @Test
+    void testeAtualizarNotaMediaErroNaN() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            usuario.atualizarNotaMedia(Double.NaN);
+        });
+    }
+
+    @Test
+    void testeRegistrarAvaliacaoComSucesso() throws SQLException {
+        Usuario avaliado = new Usuariobase(2, "Maria", "maria@inatel.br", "senha123", "888888888", criptografiaMock, "Pouso Alegre");
+        avaliado.definirAvaliacaoDAO(avaliacaoDAOMock);
+
+        when(avaliacaoDAOMock.inserir(any(Avaliacao.class))).thenReturn(100);
+        Avaliacao avaliacaoSalvaNoBanco = new Avaliacao(100, 1, 2, 5, "Excelente serviço!", LocalDate.now());
+        when(avaliacaoDAOMock.buscarPorId(100)).thenReturn(avaliacaoSalvaNoBanco);
+        when(avaliacaoDAOMock.calcularMedia(2)).thenReturn(5.0);
+
+        Avaliacao resultado = usuario.registrarAvaliacao(avaliado, 5, "Excelente serviço!");
+
+        Assertions.assertNotNull(resultado);
+        Assertions.assertEquals(100, resultado.getId());
+        Assertions.assertEquals(5.0, avaliado.getNotamedia());
+        verify(avaliacaoDAOMock).inserir(any(Avaliacao.class));
+    }
+
+    @Test
+    void testeRegistrarAvaliacaoValidacoesDeErro() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            usuario.registrarAvaliacao(null, 5, "Bom");
+        });
+
+        Usuario avaliadoSemId = new Usuariobase(0, "Maria", "maria@inatel.br", "senha123", "888", criptografiaMock, "Cidade");
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            usuario.registrarAvaliacao(avaliadoSemId, 5, "Bom");
+        });
+    }
+
+    @Test
+    void testeReceberAvaliacaoInvalida() {
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            usuario.receberAvaliacao(null);
+        });
+    }
+
+    @Test
+    void testeListarAvaliacoesRecebidasEMinhasAvaliacoes() throws SQLException {
+        Avaliacao av = new Avaliacao(10, 2, 1, 4, "Muito bom", LocalDate.now());
+        when(avaliacaoDAOMock.listarPorAvaliado(1)).thenReturn(List.of(av));
+        when(avaliacaoDAOMock.listarPorAvaliador(1)).thenReturn(List.of(av));
+
+        List<Avaliacao> recebidas = usuario.listarAvaliacoesRecebidas();
+        List<Avaliacao> feitas = usuario.listarMinhasAvaliacoes();
+
+        Assertions.assertEquals(1, recebidas.size());
+        Assertions.assertEquals(1, feitas.size());
+    }
+
+    @Test
+    void testeExcecoesDeBancoNasAvaliacoes() throws SQLException {
+        when(avaliacaoDAOMock.listarPorAvaliado(1)).thenThrow(new SQLException("Erro BD"));
+        when(avaliacaoDAOMock.listarPorAvaliador(1)).thenThrow(new SQLException("Erro BD"));
+        when(avaliacaoDAOMock.calcularMedia(1)).thenThrow(new SQLException("Erro BD"));
+
+        Assertions.assertThrows(IllegalStateException.class, () -> usuario.listarAvaliacoesRecebidas());
+        Assertions.assertThrows(IllegalStateException.class, () -> usuario.listarMinhasAvaliacoes());
+        Assertions.assertThrows(IllegalStateException.class, () -> usuario.calcularEAtualizarMedia());
     }
 
 
