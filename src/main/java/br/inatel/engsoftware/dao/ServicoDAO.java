@@ -331,7 +331,6 @@ public class ServicoDAO {
     }
 
 
-
     // Desassociar um prestador de um serviço
     public boolean desassociarPrestador(int idPrestador, int idServico)
             throws SQLException {

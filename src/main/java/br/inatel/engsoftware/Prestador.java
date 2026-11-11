@@ -23,11 +23,9 @@ public class Prestador extends Usuario {
 
     //Usado para CADASTRAR um prestador novo (a senha vem em texto puro e vira hash)
     public Prestador(int id, String nome, String email, String senha,
-                     String telefone, CriptografiaService criptografiaService,
-                     String profissao, String descricao, String cidade,
-                     double valorHora) {
-        this(id, nome, email, senha, telefone, criptografiaService,
-                profissao, descricao, cidade, valorHora, false);
+                     String telefone, CriptografiaService criptografiaService,String cidade,
+                     String profissao, String descricao,double valorHora) {
+        this(id, nome, email, senha, telefone, criptografiaService, cidade, profissao, descricao, valorHora, false);
     }
 
     //Usado para a persistencia dos dados no banco, USO EXCLUSIVO DO UsuarioDAO: carrega um prestador do banco.
