@@ -10,21 +10,6 @@ import java.util.Objects;
 
 public class Contratante extends Usuario {
 
-    private String cidade;
-    private AvaliacaoDAO avaliacaoDAO = new AvaliacaoDAO();
-
-    //Permite injeção de dependencia
-    public void definirAvaliacaoDAO(AvaliacaoDAO avaliacaoDAO) {
-        this.avaliacaoDAO = Objects.requireNonNull(avaliacaoDAO);
-    }
-
-
-    //Permite injeção de dependencia
-    private ServicoDAO servicoDAO = new ServicoDAO();
-    public void definirServicoDAO(ServicoDAO servicoDAO){
-        this.servicoDAO = Objects.requireNonNull(servicoDAO);
-    }
-
 
     //Usado para CADASTRAR um contratante novo (a senha vem em texto puro e vira hash)
     public Contratante(int id, String nome, String email, String senha,

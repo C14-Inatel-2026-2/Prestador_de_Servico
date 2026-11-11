@@ -17,22 +17,11 @@ public class Prestador extends Usuario {
 
     private String profissao;
     private String descricao;
-    private String cidade;
     private double valorHora;
     private final List<String> servicos;
     private final List<Avaliacao> avaliacoesRecebidas;
 
-    private AvaliacaoDAO avaliacaoDAO = new AvaliacaoDAO();
-    // Permite injeção de dependência
-    public void definirAvaliacaoDAO(AvaliacaoDAO avaliacaoDAO) {
-        this.avaliacaoDAO = Objects.requireNonNull(avaliacaoDAO);
-    }
 
-    private ServicoDAO servicoDAO = new ServicoDAO();
-    // Permite injeção de dependência
-    public void definirServicoDAO(ServicoDAO servicoDAO) {
-        this.servicoDAO = Objects.requireNonNull(servicoDAO);
-    }
 
 
 

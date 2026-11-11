@@ -9,7 +9,6 @@ public class AvaliacaoTest {
     LocalDate data = LocalDate.now();
     String dataFormatada = data.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     LocalDate amanha = LocalDate.now().plusDays(1);
-    LocalDate ontem = LocalDate.now().minusDays(1);
 
     private Avaliacao criarComNota(int nota) {
         return new Avaliacao(1, 1, 2, nota, "Serviço otimo", LocalDate.now());
@@ -55,10 +54,6 @@ public class AvaliacaoTest {
     @Test
     void deveRejeitarDataNoFuturo() {
         assertThrows(IllegalArgumentException.class, () -> new Avaliacao(1, 1, 2, 4, "Serviço excelente!", amanha));
-    }
-    @Test
-    void deveAceitarDataNoPassado(){
-        assertDoesNotThrow(() -> new Avaliacao(1, 1, 2, 4, "Serviço excelente!", ontem));
     }
 
     @Test

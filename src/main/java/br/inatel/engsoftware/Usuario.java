@@ -1,6 +1,13 @@
 package br.inatel.engsoftware;
 import java.util.Objects;
 
+import br.inatel.engsoftware.dao.AvaliacaoDAO;
+import br.inatel.engsoftware.dao.ServicoDAO;
+
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.List;
+
 public abstract class Usuario {
 
     private int id;
@@ -8,29 +15,50 @@ public abstract class Usuario {
     private String email;
     private String senhaHash;
     private String telefone;
+    private String cidade;
     private double notamedia;
 
     private final CriptografiaService criptografiaService;
 
+    // estavam repetido em contratante e prestador
+    private AvaliacaoDAO avaliacaoDAO = new AvaliacaoDAO();
+    private ServicoDAO servicoDAO = new ServicoDAO();
 
-    public Usuario(int id, String nome, String email, String senha, String telefone, CriptografiaService criptografiaService) {
+    public Usuario(int id, String nome, String email, String senha, String telefone, CriptografiaService criptografiaService,String cidade) {
         this.id = id;
         this.nome = nome;
         this.email = email;
         this.telefone = telefone;
         this.criptografiaService = criptografiaService;
+        this.cidade = cidade;
         this.senhaHash = this.criptografiaService.gerarHash(senha);
     }
 
-    protected Usuario(int id, String nome, String email, String senha, String telefone, CriptografiaService criptografiaService, boolean senhaJaCriptografada) {
+    protected Usuario(int id, String nome, String email, String senha, String telefone, CriptografiaService criptografiaService,String cidade ,boolean senhaJaCriptografada) {
         this.id = id;
         this.nome = nome;
         this.email = email;
         this.telefone = telefone;
+        this.cidade = cidade;
         this.criptografiaService = Objects.requireNonNull(criptografiaService);
         this.senhaHash = senhaJaCriptografada
                 ? Objects.requireNonNull(senha)
                 : this.criptografiaService.gerarHash(senha);
+    }
+
+    // ===================== INJEÇÃO DE DEPENDÊNCIA [MUDANÇA 1] =====================
+
+    public void definirAvaliacaoDAO(AvaliacaoDAO avaliacaoDAO) {
+        this.avaliacaoDAO = Objects.requireNonNull(avaliacaoDAO);
+    }
+
+    public void definirServicoDAO(ServicoDAO servicoDAO) {
+        this.servicoDAO = Objects.requireNonNull(servicoDAO);
+    }
+
+    // protected: só as filhas usam o ServicoDAO (cada uma para uma coisa diferente)
+    protected ServicoDAO getServicoDAO() {
+        return servicoDAO;
     }
 
     public int getId() { return id; }
@@ -62,9 +90,9 @@ public abstract class Usuario {
         return true;
     }
 
-
     public void atualizarNotaMedia(double notamedia) {
-        if (notamedia < 0 || notamedia > 5) {
+        // NaN passava pela checagem antiga (NaN < 0 e NaN > 5 são ambos false)
+        if (Double.isNaN(notamedia) || notamedia < 0 || notamedia > 5) {
             throw new IllegalArgumentException("A nota média deve estar entre 0 e 5.");
         }
         this.notamedia = notamedia;
