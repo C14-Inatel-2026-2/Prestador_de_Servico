@@ -70,7 +70,7 @@ public class AvaliacaoDAO {
 
         try (Connection conn = connectionFactory.abrir();
              PreparedStatement stmt = conn.prepareStatement(
-                     sql, Statement.RETURN_GENERATED_KEYS)) {
+                     sql, new String[]{"id_avaliacao"})) {
 
             stmt.setInt(1, avaliacao.getIdAutor());
             stmt.setInt(2, avaliacao.getIdAvaliado());

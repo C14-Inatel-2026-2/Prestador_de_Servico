@@ -59,6 +59,9 @@ public abstract class Usuario {
     public String getTelefone() { return telefone; }
     public void setTelefone(String telefone) { this.telefone = telefone; }
 
+    public String getCidade() { return cidade; }
+    public void setCidade(String cidade) { this.nome = cidade; }
+
     public double getNotamedia() { return notamedia; }
 
     public String getSenhaHash() { return senhaHash; }
