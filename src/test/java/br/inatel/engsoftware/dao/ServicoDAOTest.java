@@ -44,7 +44,7 @@ class ServicoDAOTest {
         ResultSet chaves = mock(ResultSet.class);
 
         when(conexao.prepareStatement(
-                anyString(), eq(Statement.RETURN_GENERATED_KEYS)
+                anyString(), any(String[].class)
         )).thenReturn(statement);
 
         when(statement.getGeneratedKeys())
@@ -252,6 +252,11 @@ class ServicoDAOTest {
         assertEquals(100.0, servicos.get(0).precoCobrado());
         verify(statement).setInt(1, 10);
     }
+
+
+
+
+
 
 }
 

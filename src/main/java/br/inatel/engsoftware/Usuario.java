@@ -10,6 +10,7 @@ public abstract class Usuario {
 
     private int id;
     private String nome;
+
     private String email;
     private String senhaHash;
     private String telefone;
@@ -18,7 +19,6 @@ public abstract class Usuario {
 
     private final CriptografiaService criptografiaService;
 
-    // estavam repetido em contratante e prestador
     private AvaliacaoDAO avaliacaoDAO = new AvaliacaoDAO();
 
     public Usuario(int id, String nome, String email, String senha, String telefone, CriptografiaService criptografiaService,String cidade) {
@@ -75,7 +75,7 @@ public abstract class Usuario {
     public void setTelefone(String telefone) { this.telefone = telefone; }
 
     public String getCidade() { return cidade; }
-    public void setCidade(String cidade) { this.nome = cidade; }
+    public void setCidade(String cidade) { this.cidade = cidade; }
 
     public double getNotamedia() { return notamedia; }
 

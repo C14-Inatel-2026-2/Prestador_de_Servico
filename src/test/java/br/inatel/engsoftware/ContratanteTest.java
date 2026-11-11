@@ -23,11 +23,16 @@ public class ContratanteTest {
     private CriptografiaService criptografiaMock;
     private AvaliacaoDAO avaliacaoDAOMock;
     private ServicoDAO servicoDAOMock;
+    private AvaliacaoDAO AvaliacaoDAOMock;
 
     @BeforeEach
     void setUp() {
         criptografiaMock = Mockito.mock(CriptografiaService.class);
+        avaliacaoDAOMock = Mockito.mock(AvaliacaoDAO.class);
+        servicoDAOMock = Mockito.mock(ServicoDAO.class);
+
         when(criptografiaMock.gerarHash(anyString())).thenReturn("hashFalso");
+
 
 
         prestador = new Prestador(8,"Paulo Ricardo Alvez",
@@ -40,8 +45,7 @@ public class ContratanteTest {
                 "roberto@gmail.com","1234567",
                 "98888-8888",criptografiaMock,
                 "Santa Rita do Sapucai");
-        avaliacaoDAOMock = mock(AvaliacaoDAO.class);
-        servicoDAOMock = mock(ServicoDAO.class);
+
         contratante.definirAvaliacaoDAO(avaliacaoDAOMock);
         contratante.definirServicoDAO(servicoDAOMock);
     }
@@ -50,7 +54,7 @@ public class ContratanteTest {
     void testeAvaliarUsuarioNuloLancaExcecao(){
         IllegalArgumentException erro = Assertions.assertThrows(IllegalArgumentException.class,
                 () -> contratante.avaliarUsuario(null, 5, "Muito bom"));
-        Assertions.assertEquals("O prestador não pode ser nulo.", erro.getMessage());
+        Assertions.assertEquals("O usuário avaliado não pode ser nulo.", erro.getMessage());
     }
 
     @Test
@@ -68,7 +72,6 @@ public class ContratanteTest {
     @Test
     void testeBuscarPrestadorPorProfissao() throws SQLException {
 
-        ServicoDAO servicoDAOMock = mock(ServicoDAO.class);
 
         when(servicoDAOMock.buscarPrestadores("Carpinteiro"))
                 .thenReturn(List.of(prestador));
@@ -86,8 +89,6 @@ public class ContratanteTest {
 
         verify(servicoDAOMock).buscarPrestadores("Carpinteiro");
     }
-
-
 
     @Test
     void testeListarMinhasAvaliacoesRetornaListaVazia(){
@@ -163,12 +164,24 @@ public class ContratanteTest {
     }
 
     @Test
-    void testeContratanteVingativoDaNotaMinimaSemComentario() {
+    void testeContratanteVingativoDaNotaMinimaSemComentario() throws SQLException {
         CriptografiaService fake = new CriptografiaFake();
         Contratante contratanteReal = new Contratante(2, "Browser", "browser@gmail.com", "amoprincesapeach",
                 "98888-8888", fake, "Santa Rita do Sapucai");
+
+        AvaliacaoDAO daoMockLocal = mock(AvaliacaoDAO.class);
+        when(daoMockLocal.inserir(any(Avaliacao.class))).thenReturn(15);
+
+        Avaliacao avaliacaoSalva = new Avaliacao(15, 2, 8, 1, "   ", java.time.LocalDate.now());
+        when(daoMockLocal.buscarPorId(15)).thenReturn(avaliacaoSalva);
+        when(daoMockLocal.calcularMedia(8)).thenReturn(1.0);
+
+        contratanteReal.definirAvaliacaoDAO(daoMockLocal);
+
         Prestador prestadorReal = new Prestador(8, "Mario", "mario@gmail.com", "familia123",
                 "95555-5555", fake, "Encanador", "Encanador experiente", "Cachoeira de Minas", 34.8);
+
+        prestadorReal.definirAvaliacaoDAO(daoMockLocal);
 
         Avaliacao avaliacao = contratanteReal.avaliarUsuario(prestadorReal, 1, "   ");
 

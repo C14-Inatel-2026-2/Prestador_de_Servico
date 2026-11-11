@@ -49,7 +49,6 @@ public class PrestadorTest {
     }
 
 
-
     @Test
     void testeSettersEGetters() {
         prestador.setNome("Pedro Alves");
@@ -84,7 +83,6 @@ public class PrestadorTest {
     }
 
 
-
     @Test
     void testeCalcularEAtualizarMediaComSucesso() throws SQLException {
         // Simula o banco retornando média 4.2
@@ -102,7 +100,7 @@ public class PrestadorTest {
                 criptografiaMock, "Pintora", "Pinturas", "SR", 40.0);
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, prestadorNaoCadastrado::calcularEAtualizarMedia);
-        assertEquals("O prestador precisa estar cadastrado.", ex.getMessage());
+        assertEquals("O usuário precisa estar cadastrado.", ex.getMessage());
     }
 
 
@@ -127,7 +125,7 @@ public class PrestadorTest {
         Avaliacao aval = new Avaliacao(10, 2, 99, 5, "Ruim", LocalDate.now());
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> prestador.receberAvaliacao(aval));
-        assertEquals("Avaliação inválida ou não pertence a este prestador.", ex.getMessage());
+        assertEquals("Avaliação inválida ou não pertence a este usuário.", ex.getMessage());
     }
 
     @Test
@@ -145,7 +143,7 @@ public class PrestadorTest {
         assertEquals(2, gerada.getIdAvaliado());
 
 
-        verify(contratanteMock).calcularEAtualizarMedia();
+        verify(contratanteMock).receberAvaliacao(any(Avaliacao.class));
         verify(avaliacaoDAOMock).inserir(any(Avaliacao.class));
     }
 
@@ -178,4 +176,40 @@ public class PrestadorTest {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> prestador.removerServico(0));
         assertEquals("O ID do serviço deve ser positivo.", ex.getMessage());
     }
+
+    @Test
+    void testeCadastrarEListarServicosPrestador() throws SQLException {
+        Prestador p = new Prestador(1, "Carlos", "carlos@inatel.br", "123", "99999", criptografiaMock, "Eletricista", "Instalações", "Santa Rita", 50.0);
+
+        ServicoDAO servicoDAOMock = mock(ServicoDAO.class);
+        p.definirServicoDAO(servicoDAOMock);
+
+        p.cadastrarServico(10, 150.0);
+        p.setDescricao("Nova descrição de eletricista");
+
+        Assertions.assertEquals("Nova descrição de eletricista", p.getDescricao());
+        Assertions.assertNotNull(p.getServicos());
+
+        verify(servicoDAOMock, times(1)).associarPrestador(anyInt(), anyInt(), anyDouble());
+    }
+
+    @Test
+    void testeCadastrarServicoPorNomeStringValidoEInvalido() {
+        Prestador p = new Prestador(1, "Carlos", "carlos@inatel.br", "123", "99999",
+                criptografiaMock, "Eletricista", "Instalações", "Santa Rita", 50.0);
+
+
+        p.cadastrarServico("Manutenção Elétrica");
+        Assertions.assertEquals(1, p.getServicos().size());
+
+
+        p.cadastrarServico("Manutenção Elétrica");
+        Assertions.assertEquals(1, p.getServicos().size());
+
+
+        p.cadastrarServico(null);
+        p.cadastrarServico("   ");
+        Assertions.assertEquals(1, p.getServicos().size());
+    }
+
 }

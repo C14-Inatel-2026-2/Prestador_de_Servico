@@ -410,7 +410,7 @@ public class UsuarioDAO {
             """;
     }
 
-    // Reconstrói a classe concreta adequada.
+
     private Usuario criarUsuario(ResultSet rs) throws SQLException {
 
         int id = rs.getInt("id_usuario");
@@ -437,9 +437,9 @@ public class UsuarioDAO {
                     senhaHash,
                     telefone,
                     criptografiaService,
+                    cidade,
                     rs.getString("profissao"),
                     rs.getString("descricao"),
-                    cidade,
                     rs.getDouble("valor_hora"),
                     true
             );

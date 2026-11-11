@@ -51,7 +51,7 @@ class AvaliacaoDAOTest {
 
     @Test
     void deveInserirAvaliacaoComSucesso() throws SQLException {
-        when(connectionMock.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(stmtMock);
+        when(connectionMock.prepareStatement(anyString(),(any(String[].class)))).thenReturn(stmtMock);
         when(stmtMock.executeUpdate()).thenReturn(1);
         when(stmtMock.getGeneratedKeys()).thenReturn(rsMock);
         when(rsMock.next()).thenReturn(true);
@@ -90,7 +90,7 @@ class AvaliacaoDAOTest {
 
     @Test
     void deveLancarSQLExceptionQuandoNaoGerarChave() throws SQLException {
-        when(connectionMock.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(stmtMock);
+        when(connectionMock.prepareStatement(anyString(),(any(String[].class)))).thenReturn(stmtMock);
         when(stmtMock.executeUpdate()).thenReturn(1);
         when(stmtMock.getGeneratedKeys()).thenReturn(rsMock);
         when(rsMock.next()).thenReturn(false);
@@ -101,9 +101,7 @@ class AvaliacaoDAOTest {
         assertEquals("Não foi possível recuperar o ID da avaliação.", exception.getMessage());
     }
 
-    // ==========================================
-    // TESTES DE BUSCA POR ID
-    // ==========================================
+
 
     @Test
     void deveBuscarPorIdComSucesso() throws SQLException {
