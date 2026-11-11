@@ -102,7 +102,7 @@ public class PrestadorTest {
                 criptografiaMock, "Pintora", "Pinturas", "SR", 40.0);
 
         IllegalStateException ex = assertThrows(IllegalStateException.class, prestadorNaoCadastrado::calcularEAtualizarMedia);
-        assertEquals("O prestador precisa estar cadastrado.", ex.getMessage());
+        assertEquals("O usuário precisa estar cadastrado.", ex.getMessage());
     }
 
 
@@ -127,7 +127,7 @@ public class PrestadorTest {
         Avaliacao aval = new Avaliacao(10, 2, 99, 5, "Ruim", LocalDate.now());
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> prestador.receberAvaliacao(aval));
-        assertEquals("Avaliação inválida ou não pertence a este prestador.", ex.getMessage());
+        assertEquals("Avaliação inválida ou não pertence a este usuário.", ex.getMessage());
     }
 
     @Test
@@ -145,7 +145,7 @@ public class PrestadorTest {
         assertEquals(2, gerada.getIdAvaliado());
 
 
-        verify(contratanteMock).calcularEAtualizarMedia();
+        verify(contratanteMock).receberAvaliacao(any(Avaliacao.class));
         verify(avaliacaoDAOMock).inserir(any(Avaliacao.class));
     }
 

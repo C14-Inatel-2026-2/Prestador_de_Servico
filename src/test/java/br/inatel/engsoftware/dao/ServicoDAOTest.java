@@ -44,7 +44,7 @@ class ServicoDAOTest {
         ResultSet chaves = mock(ResultSet.class);
 
         when(conexao.prepareStatement(
-                anyString(), eq(Statement.RETURN_GENERATED_KEYS)
+                anyString(), any(String[].class)
         )).thenReturn(statement);
 
         when(statement.getGeneratedKeys())

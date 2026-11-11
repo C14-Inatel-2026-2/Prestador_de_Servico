@@ -54,7 +54,7 @@ class UsuarioDAOTest {
 
         when(connectionMock.getAutoCommit()).thenReturn(true);
 
-        when(connectionMock.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(stmtMock);
+        when(connectionMock.prepareStatement(anyString(),(any(String[].class)))).thenReturn(stmtMock);
 
         when(connectionMock.prepareStatement(contains("INSERT INTO prestadores"))).thenReturn(stmtPerfilMock);
 
@@ -76,7 +76,7 @@ class UsuarioDAOTest {
 
     @Test
     void deveFazerRollbackEmCasoDeFalhaNaInsercao() throws SQLException {
-        when(connectionMock.prepareStatement(anyString(), eq(Statement.RETURN_GENERATED_KEYS))).thenReturn(stmtMock);
+        when(connectionMock.prepareStatement(anyString(),(any(String[].class)))).thenReturn(stmtMock);
 
 
         when(stmtMock.executeUpdate()).thenThrow(new SQLException("Erro no banco"));
@@ -135,7 +135,7 @@ class UsuarioDAOTest {
         when(rsMock.wasNull()).thenReturn(false);
         when(rsMock.getString("profissao")).thenReturn("Marceneiro");
         when(rsMock.getString("descricao")).thenReturn("Móveis planejados");
-        when(rsMock.getString("cidade_prestador")).thenReturn("Itajubá");
+        when(rsMock.getString("cidade")).thenReturn("Itajubá");
         when(rsMock.getDouble("valor_hora")).thenReturn(70.0);
 
         Usuario encontrado = usuarioDAO.buscarPorId(1);
