@@ -41,7 +41,7 @@ public class ServicoDAO {
 
         try (Connection conn = connectionFactory.abrir();
              PreparedStatement stmt = conn.prepareStatement(
-                     sql, Statement.RETURN_GENERATED_KEYS)) {
+                     sql, new String[]{"id"})) {
 
             stmt.setString(1, servico.getNome());
             stmt.setString(2, servico.getDescricao());
@@ -252,7 +252,7 @@ public class ServicoDAO {
             ON u.id_usuario = p.id_usuario
         WHERE LOWER(u.nome) LIKE ?
            OR LOWER(p.profissao) LIKE ?
-           OR LOWER(p.cidade) LIKE ?
+           OR LOWER(u.cidade) LIKE ?
            OR EXISTS (
                SELECT 1
                FROM prestador_servicos ps

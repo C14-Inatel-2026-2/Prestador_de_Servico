@@ -1,0 +1,144 @@
+classDiagram
+    direction LR
+
+    namespace dominio {
+        class Usuario {
+            <<abstract>>
+            -int id
+            -String nome
+            -String email
+            -String senhaHash
+            -String telefone
+            -double notamedia
+            +login(email, senha) boolean
+            +alterarSenha(atual, nova) boolean
+            +atualizarNotaMedia(media) void
+            +definirIdPersistido(id) void
+            +exibirPerfil() void
+        }
+        class Contratante {
+            -String cidade
+            -List~Avaliacao~ minhasAvaliacoes
+            +buscarPrestador(termo) List~Prestador~
+            +avaliarUsuario(avaliado, nota, comentario) Avaliacao
+            +listarMinhasAvaliacoes() List~Avaliacao~
+        }
+        class Prestador {
+            -String profissao
+            -String cidade
+            -double valorHora
+            -List~String~ servicos
+            -List~Avaliacao~ avaliacoesRecebidas
+            +cadastrarServico(nome) void
+            +removerServico(nome) void
+            +receberAvaliacao(avaliacao) void
+            +calcularEAtualizarMedia() void
+        }
+        class Avaliacao {
+            -int idAutor
+            -int idAvaliado
+            -int nota
+            -String comentario
+            -LocalDate data
+            +formatar() String
+        }
+        class Servico {
+            -String nome
+            -String descricao
+            -double precoSugerido
+            +validar() boolean
+            +formatar() String
+        }
+        class CriptografiaService {
+            <<interface>>
+            +gerarHash(senha) String
+            +verificarSenha(senha, hash) boolean
+        }
+        class BCryptService
+    }
+
+    namespace persistencia {
+        class UsuarioDAO {
+            +inserir(usuario) void
+            +buscarPorId(id) Usuario
+            +buscarPorEmail(email) Usuario
+            +atualizar(usuario) boolean
+            +excluir(id) boolean
+        }
+        class AvaliacaoDAO {
+            +inserir(avaliacao) int
+            +listarPorAvaliado(id) List~Avaliacao~
+            +calcularMedia(idAvaliado) double
+        }
+        class ServicoDAO {
+            +inserir(servico) void
+            +buscarPorId(id) Servico
+            +atualizar(servico) boolean
+            +excluir(id) boolean
+        }
+        class ConnectionFactory {
+            <<interface>>
+            +abrir() Connection
+        }
+        class Conexao {
+            +conectar()$ Connection
+        }
+    }
+
+    namespace testes {
+        class UsuarioTest {
+            <<test>>
+            11 testes, mock
+        }
+        class ContratanteTest {
+            <<test>>
+            10 testes, mock + fake
+        }
+        class ContratanteCriptografiaTest {
+            <<test>>
+            4 testes, mock + BCrypt real
+        }
+        class PrestadorTest {
+            <<test>>
+            12 testes, mock + BCrypt real
+        }
+        class AvaliacaoTest {
+            <<test>>
+            22 testes, sem dublê
+        }
+        class ServicoTest {
+            <<test>>
+            13 testes, sem dublê
+        }
+        class BCryptServiceTest {
+            <<test>>
+            5 testes, sem dublê
+        }
+        class ServicoDAOTest {
+            <<test>>
+            5 testes, JDBC mockado
+        }
+    }
+
+    Usuario <|-- Contratante
+    Usuario <|-- Prestador
+    CriptografiaService <|.. BCryptService
+    Usuario --> CriptografiaService : injeção no construtor
+    Contratante "1" --> "*" Avaliacao : cria
+    Prestador "1" o-- "*" Avaliacao : recebe
+    UsuarioDAO ..> Usuario : persiste
+    AvaliacaoDAO ..> Avaliacao : persiste
+    ServicoDAO ..> Servico : persiste
+    UsuarioDAO --> ConnectionFactory
+    AvaliacaoDAO --> ConnectionFactory
+    ServicoDAO --> ConnectionFactory
+    ConnectionFactory ..> Conexao : implementação padrão
+
+    UsuarioTest ..> Usuario : testa
+    ContratanteTest ..> Contratante : testa
+    ContratanteCriptografiaTest ..> Contratante : testa
+    PrestadorTest ..> Prestador : testa
+    AvaliacaoTest ..> Avaliacao : testa
+    ServicoTest ..> Servico : testa
+    BCryptServiceTest ..> BCryptService : testa
+    ServicoDAOTest ..> ServicoDAO : testa

@@ -49,8 +49,8 @@ public class UsuarioDAO {
 
         String sqlUsuario = """
             INSERT INTO usuarios
-            (nome, email, senha_hash, telefone, tipo)
-            VALUES (?, ?, ?, ?, ?)
+            (nome, email, senha_hash, telefone, cidade,tipo)
+            VALUES (?, ?, ?, ?, ?,?)
             """;
 
         try (Connection conn = connectionFactory.abrir()) {
@@ -62,13 +62,14 @@ public class UsuarioDAO {
                 int idGerado;
 
                 try (PreparedStatement stmt = conn.prepareStatement(
-                        sqlUsuario, Statement.RETURN_GENERATED_KEYS)) {
+                        sqlUsuario, new String[]{"id_usuario"})) {
 
                     stmt.setString(1, usuario.getNome());
                     stmt.setString(2, usuario.getEmail());
                     stmt.setString(3, usuario.getSenhaHash());
                     stmt.setString(4, usuario.getTelefone());
-                    stmt.setString(5, obterTipo(usuario));
+                    stmt.setString(5, usuario.getCidade());
+                    stmt.setString(6, obterTipo(usuario));
 
                     stmt.executeUpdate();
 
@@ -108,16 +109,15 @@ public class UsuarioDAO {
 
             String sql = """
                 INSERT INTO prestadores
-                (id_usuario, profissao, descricao, cidade, valor_hora)
-                VALUES (?, ?, ?, ?, ?)
+                (id_usuario, profissao, descricao, valor_hora)
+                VALUES (?, ?, ?, ?)
                 """;
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, id);
                 stmt.setString(2, prestador.getProfissao());
                 stmt.setString(3, prestador.getDescricao());
-                stmt.setString(4, prestador.getCidade());
-                stmt.setDouble(5, prestador.getValorHora());
+                stmt.setDouble(4, prestador.getValorHora());
 
                 stmt.executeUpdate();
             }
@@ -125,13 +125,12 @@ public class UsuarioDAO {
         } else if (usuario instanceof Contratante contratante) {
 
             String sql = """
-                INSERT INTO contratantes (id_usuario, cidade)
-                VALUES (?, ?)
+                INSERT INTO contratantes (id_usuario)
+                VALUES (?)
                 """;
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, id);
-                stmt.setString(2, contratante.getCidade());
                 stmt.executeUpdate();
             }
         }
@@ -234,7 +233,7 @@ public class UsuarioDAO {
 
         String sqlUsuario = """
             UPDATE usuarios
-            SET nome = ?, email = ?, senha_hash = ?, telefone = ?
+            SET nome = ?, email = ?, senha_hash = ?, telefone = ? , cidade = ?
             WHERE id_usuario = ? AND tipo = ?
             """;
 
@@ -277,8 +276,9 @@ public class UsuarioDAO {
                     stmt.setString(2, usuario.getEmail());
                     stmt.setString(3, usuario.getSenhaHash());
                     stmt.setString(4, usuario.getTelefone());
-                    stmt.setInt(5, usuario.getId());
-                    stmt.setString(6, obterTipo(usuario));
+                    stmt.setString(5, usuario.getCidade());
+                    stmt.setInt(6, usuario.getId());
+                    stmt.setString(7, obterTipo(usuario));
 
                     stmt.executeUpdate();
                 }
@@ -310,8 +310,7 @@ public class UsuarioDAO {
 
             String sql = """
                 UPDATE prestadores
-                SET profissao = ?, descricao = ?,
-                    cidade = ?, valor_hora = ?
+                SET profissao = ?, descricao = ?, valor_hora = ?
                 WHERE id_usuario = ?
                 """;
 
@@ -319,9 +318,8 @@ public class UsuarioDAO {
 
                 stmt.setString(1, prestador.getProfissao());
                 stmt.setString(2, prestador.getDescricao());
-                stmt.setString(3, prestador.getCidade());
-                stmt.setDouble(4, prestador.getValorHora());
-                stmt.setInt(5, prestador.getId());
+                stmt.setDouble(3, prestador.getValorHora());
+                stmt.setInt(4, prestador.getId());
 
                 if (stmt.executeUpdate() == 0) {
                     throw new SQLException(
@@ -331,20 +329,16 @@ public class UsuarioDAO {
 
         } else if (usuario instanceof Contratante contratante) {
 
-            String sql = """
-                UPDATE contratantes
-                SET cidade = ?
-                WHERE id_usuario = ?
-                """;
+            String sql = "SELECT 1 FROM contratantes WHERE id_usuario = ?";
 
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, contratante.getId());
 
-                stmt.setString(1, contratante.getCidade());
-                stmt.setInt(2, contratante.getId());
-
-                if (stmt.executeUpdate() == 0) {
-                    throw new SQLException(
-                            "Perfil de contratante não encontrado.");
+                try (ResultSet rs = stmt.executeQuery()) {
+                    if (!rs.next()) {
+                        throw new SQLException(
+                                "Perfil de contratante não encontrado.");
+                    }
                 }
             }
         }
@@ -401,14 +395,13 @@ public class UsuarioDAO {
                 u.email,
                 u.senha_hash,
                 u.telefone,
+                u.cidade,
                 u.tipo,
                 p.id_usuario AS perfil_prestador,
                 p.profissao,
                 p.descricao,
-                p.cidade AS cidade_prestador,
                 p.valor_hora,
-                c.id_usuario AS perfil_contratante,
-                c.cidade AS cidade_contratante
+                c.id_usuario AS perfil_contratante
             FROM usuarios u
             LEFT JOIN prestadores p
                 ON p.id_usuario = u.id_usuario
@@ -425,6 +418,7 @@ public class UsuarioDAO {
         String email = rs.getString("email");
         String senhaHash = rs.getString("senha_hash");
         String telefone = rs.getString("telefone");
+        String cidade = rs.getString("cidade");
         String tipo = rs.getString("tipo");
 
         if ("PRESTADOR".equals(tipo)) {
@@ -445,7 +439,7 @@ public class UsuarioDAO {
                     criptografiaService,
                     rs.getString("profissao"),
                     rs.getString("descricao"),
-                    rs.getString("cidade_prestador"),
+                    cidade,
                     rs.getDouble("valor_hora"),
                     true
             );
@@ -467,7 +461,7 @@ public class UsuarioDAO {
                     senhaHash,
                     telefone,
                     criptografiaService,
-                    rs.getString("cidade_contratante"),
+                    cidade,
                     true
             );
         }
@@ -518,15 +512,15 @@ public class UsuarioDAO {
                     "Telefone muito longo.");
         }
 
+        if (usuario.getCidade() != null
+                && usuario.getCidade().length() > 100) {
+            throw new IllegalArgumentException(
+                    "Cidade muito longa.");
+        }
+
         if (usuario instanceof Prestador prestador) {
 
             validarTexto(prestador.getProfissao(), "Profissão", 100);
-
-            if (prestador.getCidade() != null
-                    && prestador.getCidade().length() > 100) {
-                throw new IllegalArgumentException(
-                        "Cidade muito longa.");
-            }
 
             if (!Double.isFinite(prestador.getValorHora())
                     || prestador.getValorHora() < 0) {
@@ -535,12 +529,6 @@ public class UsuarioDAO {
             }
         }
 
-        if (usuario instanceof Contratante contratante
-                && contratante.getCidade() != null
-                && contratante.getCidade().length() > 100) {
-            throw new IllegalArgumentException(
-                    "Cidade muito longa.");
-        }
     }
 
     private void validarTexto(String texto, String campo,

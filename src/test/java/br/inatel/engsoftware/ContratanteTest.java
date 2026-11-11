@@ -15,10 +15,14 @@ import br.inatel.engsoftware.dao.ServicoDAO;
 
 import static org.mockito.Mockito.*;
 
+import br.inatel.engsoftware.dao.AvaliacaoDAO;
+
 public class ContratanteTest {
     private Prestador prestador;
     private Contratante contratante;
     private CriptografiaService criptografiaMock;
+    private AvaliacaoDAO avaliacaoDAOMock;
+    private ServicoDAO servicoDAOMock;
 
     @BeforeEach
     void setUp() {
@@ -36,13 +40,17 @@ public class ContratanteTest {
                 "roberto@gmail.com","1234567",
                 "98888-8888",criptografiaMock,
                 "Santa Rita do Sapucai");
+        avaliacaoDAOMock = mock(AvaliacaoDAO.class);
+        servicoDAOMock = mock(ServicoDAO.class);
+        contratante.definirAvaliacaoDAO(avaliacaoDAOMock);
+        contratante.definirServicoDAO(servicoDAOMock);
     }
 
     @Test
-    void testeAvaliarUsuarioNuloRetornaNull(){
-        Avaliacao resultado = contratante.avaliarUsuario(null,5,
-                "Muito bom");
-        Assertions.assertNull(resultado);
+    void testeAvaliarUsuarioNuloLancaExcecao(){
+        IllegalArgumentException erro = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> contratante.avaliarUsuario(null, 5, "Muito bom"));
+        Assertions.assertEquals("O prestador não pode ser nulo.", erro.getMessage());
     }
 
     @Test
@@ -106,53 +114,53 @@ public class ContratanteTest {
     }
 
     @Test
-    void testeReceberNotaInvalidaAvaliacao(){
-        Avaliacao notaInvalida = contratante.avaliarUsuario(prestador,-1,"Muito bom");
-        Assertions.assertNull(notaInvalida);
+    void testeAvaliarUsuarioComNotaInvalidaLancaExcecao(){
+        IllegalArgumentException erro = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> contratante.avaliarUsuario(prestador, -1, "Muito bom"));
+        Assertions.assertTrue(erro.getMessage().contains("Nota deve estar entre 1 e 5"));
     }
 
     @Test
-    void testeAvaliarUsuarioComMesmoId(){
+    void testeAvaliarUsuarioComMesmoIdLancaExcecao(){
         prestador = new Prestador(2,"Paulo Ricardo Alvez",
                 "Paulo@gmail.com","8756985",
                 "95555-5555", criptografiaMock, "Carpinteiro",
                 "Faço carpintaria a mais de 25 anos, sou o senhor responsavel e trabalhador, caso precisem dos meus serviços estou a disposição!",
                 "Cachoeira de Minas",34.8);
 
-        contratante = new Contratante(2,"Roberto Carlos da Siva","roberto@gmail.com","1234567",
-                "98888-8888",criptografiaMock,"Santa Rita do Sapucai");
-
-        Avaliacao idIgual = contratante.avaliarUsuario(prestador,5,"Muito bom");
-        Assertions.assertNull(idIgual);
+        IllegalArgumentException erro = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> contratante.avaliarUsuario(prestador, 5, "Muito bom"));
+        Assertions.assertTrue(erro.getMessage().contains("Um usuário não pode avaliar a si mesmo"));
     }
+
     @Test
-    void testeContratanteComNotaAbsurdaNaoGeraAvaliacao() {
+    void testeContratanteComNotaAbsurdaLancaExcecaoENaoEntregaAvaliacao() {
         Prestador prestadorMock = Mockito.mock(Prestador.class);
         when(prestadorMock.getId()).thenReturn(8);
-
-        Avaliacao resultado = contratante.avaliarUsuario(prestadorMock, 1000,
-                "Nota mil!!! ;)");
-
-        Assertions.assertNull(resultado);
+        IllegalArgumentException erro = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> contratante.avaliarUsuario(prestadorMock, 1000, "Nota mil ;)"));
+        Assertions.assertTrue(erro.getMessage().contains("Nota deve estar entre 1 e 5"));
         verify(prestadorMock, never()).receberAvaliacao(any());
     }
 
     @Test
-    void testeContratanteAvaliaUsuarioCorretamente(){
-        Prestador prestadorMock = Mockito.mock(Prestador.class); when(prestadorMock.getId()).thenReturn(8);
-        Avaliacao avaliacao = contratante.avaliarUsuario(prestadorMock, 5, "Cliente satisfeito e serviço realizado sem problemas.");
-
-        Assertions.assertNotNull(avaliacao);
+    void testeAvaliarUsuarioValidoSalvaNoBancoEEntregaAoPrestador() throws SQLException {
+        when(avaliacaoDAOMock.inserir(any(Avaliacao.class))).thenReturn(10);
+        Prestador prestadorMock = Mockito.mock(Prestador.class);
+        when(prestadorMock.getId()).thenReturn(8);
+        Avaliacao avaliacao = contratante.avaliarUsuario(prestadorMock, 5,
+                "Cliente satisfeito e serviço realizado sem problemas.");
         Assertions.assertAll(
+                () -> Assertions.assertEquals(10, avaliacao.getId()),
                 () -> Assertions.assertEquals(2, avaliacao.getIdAutor()),
                 () -> Assertions.assertEquals(8, avaliacao.getIdAvaliado()),
                 () -> Assertions.assertEquals(5, avaliacao.getNota()),
                 () -> Assertions.assertEquals("Cliente satisfeito e serviço realizado sem problemas.", avaliacao.getComentario()),
                 () -> Assertions.assertNotNull(avaliacao.getData())
         );
-
+        verify(avaliacaoDAOMock, times(1)).inserir(any(Avaliacao.class));
+        verify(prestadorMock, times(1)).receberAvaliacao(any(Avaliacao.class));
     }
-
 
     @Test
     void testeContratanteVingativoDaNotaMinimaSemComentario() {
