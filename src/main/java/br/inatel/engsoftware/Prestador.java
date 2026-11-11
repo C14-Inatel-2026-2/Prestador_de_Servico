@@ -32,25 +32,42 @@ public class Prestador extends Usuario {
 
     //Usado para a persistencia dos dados no banco, USO EXCLUSIVO DO UsuarioDAO: carrega um prestador do banco.
     public Prestador(int id, String nome, String email, String senha, String telefone,
-                     CriptografiaService criptografiaService,String cidade,
+                     CriptografiaService criptografiaService, String cidade,
                      String profissao, String descricao, double valorHora, boolean senhaJaCriptografada) {
-        super(id, nome, email, senha, telefone, criptografiaService, cidade,senhaJaCriptografada);
+        super(id, nome, email, senha, telefone, criptografiaService, cidade, senhaJaCriptografada);
         this.profissao = profissao;
         this.descricao = descricao;
         this.valorHora = valorHora;
         this.servicos = new ArrayList<>();
     }
 
-    public String getProfissao() { return profissao; }
-    public void setProfissao(String profissao) { this.profissao = profissao; }
+    public String getProfissao() {
+        return profissao;
+    }
 
-    public String getDescricao() { return descricao; }
-    public void setDescricao(String descricao) { this.descricao = descricao; }
+    public void setProfissao(String profissao) {
+        this.profissao = profissao;
+    }
 
-    public double getValorHora() { return valorHora; }
-    public void setValorHora(double valorHora) { this.valorHora = valorHora; }
+    public String getDescricao() {
+        return descricao;
+    }
 
-    public List<String> getServicos() { return servicos; }
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+
+    public double getValorHora() {
+        return valorHora;
+    }
+
+    public void setValorHora(double valorHora) {
+        this.valorHora = valorHora;
+    }
+
+    public List<String> getServicos() {
+        return servicos;
+    }
 
     public void cadastrarServico(String servico) {
         if (servico != null && !servico.isBlank() && !servicos.contains(servico)) {
@@ -89,7 +106,6 @@ public class Prestador extends Usuario {
     }
 
 
-
     // Remover associação entre prestador e serviço
     public boolean removerServico(int idServico) {
 
@@ -121,7 +137,7 @@ public class Prestador extends Usuario {
             return servicoDAO.listarServicosPorPrestador(this.getId());
         } catch (SQLException e) {
             throw new IllegalStateException(
-                    "Erro ao consultar serviços no PostgreSQL.", e);
+                    "Erro ao consultar serviços no banco.", e);
         }
     }
 
@@ -139,7 +155,7 @@ public class Prestador extends Usuario {
         System.out.println("Serviços: ");
 
         if (this.getId() > 0) {
-            try{
+            try {
                 for (ServicoDAO.ServicoPrestado item : listarServicosCadastrados()) {
                     System.out.println("- " + item.servico().getNome() + " | Preço cobrado: R$ " + item.precoCobrado());
                 }
@@ -149,3 +165,5 @@ public class Prestador extends Usuario {
         }
     }
 }
+
+
