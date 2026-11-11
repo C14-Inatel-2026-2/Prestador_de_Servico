@@ -1,5 +1,6 @@
 package br.inatel.engsoftware.dao;
 
+import br.inatel.engsoftware.Contratante;
 import br.inatel.engsoftware.CriptografiaService;
 import br.inatel.engsoftware.Prestador;
 import br.inatel.engsoftware.Usuario;
@@ -35,6 +36,8 @@ class UsuarioDAOTest {
 
     private UsuarioDAO usuarioDAO;
     private Prestador prestadorValido;
+    private Contratante contratanteValido;
+
 
     @BeforeEach
     void setUp() throws SQLException {
@@ -44,7 +47,11 @@ class UsuarioDAOTest {
 
         // Criando um prestador válido com ID 0 para simular um novo cadastro
         prestadorValido = new Prestador(0, "Ana Silva", "ana@email.com", "senha123", "999999999",
-                criptografiaMock, "Encanadora", "Serviços gerais", "Santa Rita", 60.0);
+                criptografiaMock, "Santa Rita", "Encanadora", "Serviços gerais", 60.0);
+
+        // NOVO: contratante para testar o caminho do outro tipo
+        contratanteValido = new Contratante(0, "Bruno Lima", "bruno@email.com", "senha123", "888888888",
+                criptografiaMock, "Pouso Alegre");
 
         lenient().when(factoryMock.abrir()).thenReturn(connectionMock);
     }
@@ -53,9 +60,7 @@ class UsuarioDAOTest {
     void deveInserirPrestadorComSucessoEComitarTransacao() throws SQLException {
 
         when(connectionMock.getAutoCommit()).thenReturn(true);
-
         when(connectionMock.prepareStatement(anyString(),(any(String[].class)))).thenReturn(stmtMock);
-
         when(connectionMock.prepareStatement(contains("INSERT INTO prestadores"))).thenReturn(stmtPerfilMock);
 
         when(stmtMock.executeUpdate()).thenReturn(1);
@@ -67,6 +72,10 @@ class UsuarioDAOTest {
 
         assertEquals(15, prestadorValido.getId());
 
+        // NOVO: a cidade vai para a tabela usuarios (5º parâmetro) e o tipo é o 6º faço a verificação se real mudou a posição da cidade dentro do banco
+        verify(stmtMock).setString(5, "Santa Rita");
+        verify(stmtMock).setString(6, "PRESTADOR");
+
         verify(connectionMock).setAutoCommit(false);
         verify(stmtMock).executeUpdate();
         verify(stmtPerfilMock).executeUpdate();
@@ -74,18 +83,40 @@ class UsuarioDAOTest {
         verify(connectionMock).setAutoCommit(true); // Retorna ao estado original
     }
 
+    // NOVO: o contratante grava a cidade em usuarios e só o id em contratantes
+    @Test
+    void deveInserirContratanteComCidadeNaTabelaUsuarios() throws SQLException {
+
+        when(connectionMock.getAutoCommit()).thenReturn(true);
+        when(connectionMock.prepareStatement(anyString(), any(String[].class))).thenReturn(stmtMock);
+        when(connectionMock.prepareStatement(contains("INSERT INTO contratantes"))).thenReturn(stmtPerfilMock);
+
+        when(stmtMock.getGeneratedKeys()).thenReturn(rsMock);
+        when(rsMock.next()).thenReturn(true);
+        when(rsMock.getInt(1)).thenReturn(20);
+
+        usuarioDAO.inserir(contratanteValido);
+
+        assertEquals(20, contratanteValido.getId());
+        // fazendo a mesma verificação aqui, pra ver se a troca foi feita
+        verify(stmtMock).setString(5, "Pouso Alegre");
+        verify(stmtMock).setString(6, "CONTRATANTE");
+
+        verify(stmtPerfilMock).setInt(1, 20);
+        verify(stmtPerfilMock, never()).setString(anyInt(), anyString()); // perfil sem cidade
+        verify(stmtPerfilMock).executeUpdate();
+        verify(connectionMock).commit();
+    }
+
+
     @Test
     void deveFazerRollbackEmCasoDeFalhaNaInsercao() throws SQLException {
         when(connectionMock.prepareStatement(anyString(),(any(String[].class)))).thenReturn(stmtMock);
-
-
         when(stmtMock.executeUpdate()).thenThrow(new SQLException("Erro no banco"));
 
         SQLException ex = assertThrows(SQLException.class, () -> usuarioDAO.inserir(prestadorValido));
 
         assertEquals("Erro no banco", ex.getMessage());
-
-
         verify(connectionMock).rollback();
         verify(connectionMock, never()).commit();
     }
@@ -101,7 +132,7 @@ class UsuarioDAOTest {
     @Test
     void naoDevePermitirEmailInvalido() {
         Prestador usuarioEmailInvalido = new Prestador(0, "Ana", "email-sem-arroba", "senha", "999",
-                criptografiaMock, "Profissão", "Desc", "Cidade", 50.0);
+                criptografiaMock, "Cidade", "Profissão", "Desc", 50.0);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> usuarioDAO.inserir(usuarioEmailInvalido));
         assertEquals("Formato de e-mail inválido.", ex.getMessage());
@@ -110,10 +141,21 @@ class UsuarioDAOTest {
     @Test
     void naoDevePermitirValorHoraNegativo() {
         Prestador usuarioValorInvalido = new Prestador(0, "Ana", "ana@email.com", "senha", "999",
-                criptografiaMock, "Profissão", "Desc", "Cidade", -10.0);
+                criptografiaMock, "Cidade", "Profissão", "Desc", -10.0);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> usuarioDAO.inserir(usuarioValorInvalido));
         assertEquals("Valor por hora inválido.", ex.getMessage());
+    }
+
+    // NOVO: a validação de tamanho da cidade agora vale para qualquer usuário
+    @Test
+    void naoDevePermitirCidadeMuitoLonga() {
+        Contratante cidadeLonga = new Contratante(0, "Bruno", "bruno@email.com", "senha", "888",
+                criptografiaMock, "x".repeat(101));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> usuarioDAO.inserir(cidadeLonga));
+        assertEquals("Cidade muito longa.", ex.getMessage());
     }
 
     @Test
@@ -128,6 +170,7 @@ class UsuarioDAOTest {
         when(rsMock.getString("email")).thenReturn("carlos@email.com");
         when(rsMock.getString("senha_hash")).thenReturn("hash");
         when(rsMock.getString("telefone")).thenReturn("123");
+        when(rsMock.getString("cidade")).thenReturn("Itajubá");
         when(rsMock.getString("tipo")).thenReturn("PRESTADOR");
 
 
@@ -135,15 +178,20 @@ class UsuarioDAOTest {
         when(rsMock.wasNull()).thenReturn(false);
         when(rsMock.getString("profissao")).thenReturn("Marceneiro");
         when(rsMock.getString("descricao")).thenReturn("Móveis planejados");
-        when(rsMock.getString("cidade")).thenReturn("Itajubá");
         when(rsMock.getDouble("valor_hora")).thenReturn(70.0);
 
         Usuario encontrado = usuarioDAO.buscarPorId(1);
 
         assertNotNull(encontrado);
-        assertTrue(encontrado instanceof Prestador);
-        assertEquals("Carlos", encontrado.getNome());
-        assertEquals("Marceneiro", ((Prestador) encontrado).getProfissao());
+        Prestador prestador = assertInstanceOf(Prestador.class, encontrado);
+
+        assertEquals("Carlos", prestador.getNome());
+        // NOVO: cada campo no lugar certo (pega troca de ordem no construtor) -- para ver se a ordem esta correta
+
+        assertEquals("Itajubá", prestador.getCidade());
+        assertEquals("Marceneiro", prestador.getProfissao());
+        assertEquals("Móveis planejados", prestador.getDescricao());
+        assertEquals(70.0, prestador.getValorHora());
     }
 
     @Test
@@ -168,6 +216,21 @@ class UsuarioDAOTest {
 
 
         verify(stmtMock).setString(1, "%Ana !% Silva%");
+    }
+
+    // NOVO: a consulta precisa trazer u.cidade e não as colunas antigas
+    @Test
+    void consultaDeveLerCidadeDaTabelaUsuarios() throws SQLException {
+        when(connectionMock.prepareStatement(anyString())).thenReturn(stmtMock);
+        when(stmtMock.executeQuery()).thenReturn(rsMock);
+        when(rsMock.next()).thenReturn(false);
+
+        usuarioDAO.buscarPorId(1);
+
+        verify(connectionMock).prepareStatement(argThat(sql ->
+                sql.contains("u.cidade")
+                        && !sql.contains("cidade_prestador")
+                        && !sql.contains("cidade_contratante")));
     }
 
 
@@ -205,6 +268,18 @@ class UsuarioDAOTest {
         boolean atualizado = usuarioDAO.atualizar(prestadorValido);
 
         assertTrue(atualizado);
+
+        // NOVO: cidade vai no UPDATE de usuarios (5º), id e tipo vêm depois
+        verify(stmtUpdateUser).setString(5, "Santa Rita");
+        verify(stmtUpdateUser).setInt(6, 1);
+        verify(stmtUpdateUser).setString(7, "PRESTADOR");
+
+        // NOVO: o UPDATE de prestadores tem 4 parâmetros, sem cidade
+        verify(stmtUpdatePerfil).setString(1, "Encanadora");
+        verify(stmtUpdatePerfil).setString(2, "Serviços gerais");
+        verify(stmtUpdatePerfil).setDouble(3, 60.0);
+        verify(stmtUpdatePerfil).setInt(4, 1);
+
         verify(connectionMock).commit();
     }
 
@@ -253,5 +328,53 @@ class UsuarioDAOTest {
         assertEquals("Carlos", encontrados.get(0).getNome());
     }
 
+    // NOVO: contratante só confere se o perfil existe
+    @Test
+    void deveAtualizarContratanteConferindoPerfil() throws SQLException {
+        contratanteValido.definirIdPersistido(2);
 
+        when(connectionMock.prepareStatement(contains("SELECT tipo FROM usuarios"))).thenReturn(stmtMock);
+        when(stmtMock.executeQuery()).thenReturn(rsMock);
+        when(rsMock.next()).thenReturn(true);
+        when(rsMock.getString("tipo")).thenReturn("CONTRATANTE");
+
+        PreparedStatement stmtUpdateUser = mock(PreparedStatement.class);
+        when(connectionMock.prepareStatement(contains("UPDATE usuarios"))).thenReturn(stmtUpdateUser);
+
+        ResultSet rsPerfil = mock(ResultSet.class);
+        when(connectionMock.prepareStatement(contains("SELECT 1 FROM contratantes"))).thenReturn(stmtPerfilMock);
+        when(stmtPerfilMock.executeQuery()).thenReturn(rsPerfil);
+        when(rsPerfil.next()).thenReturn(true);
+
+        assertTrue(usuarioDAO.atualizar(contratanteValido));
+
+        verify(stmtUpdateUser).setString(5, "Pouso Alegre");
+        verify(stmtPerfilMock).setInt(1, 2);
+        verify(connectionMock).commit();
+    }
+
+    // NOVO: perfil de contratante inexistente desfaz a transação
+    @Test
+    void deveFazerRollbackSePerfilDeContratanteNaoExistir() throws SQLException {
+        contratanteValido.definirIdPersistido(2);
+
+        when(connectionMock.prepareStatement(contains("SELECT tipo FROM usuarios"))).thenReturn(stmtMock);
+        when(stmtMock.executeQuery()).thenReturn(rsMock);
+        when(rsMock.next()).thenReturn(true);
+        when(rsMock.getString("tipo")).thenReturn("CONTRATANTE");
+
+        PreparedStatement stmtUpdateUser = mock(PreparedStatement.class);
+        when(connectionMock.prepareStatement(contains("UPDATE usuarios"))).thenReturn(stmtUpdateUser);
+
+        ResultSet rsPerfil = mock(ResultSet.class);
+        when(connectionMock.prepareStatement(contains("SELECT 1 FROM contratantes"))).thenReturn(stmtPerfilMock);
+        when(stmtPerfilMock.executeQuery()).thenReturn(rsPerfil);
+        when(rsPerfil.next()).thenReturn(false);
+
+        SQLException ex = assertThrows(SQLException.class, () -> usuarioDAO.atualizar(contratanteValido));
+
+        assertEquals("Perfil de contratante não encontrado.", ex.getMessage());
+        verify(connectionMock).rollback();
+        verify(connectionMock, never()).commit();
+    }
 }
