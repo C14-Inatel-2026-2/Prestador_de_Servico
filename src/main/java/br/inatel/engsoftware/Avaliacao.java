@@ -19,7 +19,7 @@ public class Avaliacao {
 
 
     public Avaliacao(int id,int idAutor, int idAvaliado, int nota, String comentario, LocalDate data) {
-        List<String> erros = coletarErros(idAutor, idAvaliado, nota, comentario, data);
+        List<String> erros = validar(idAutor, idAvaliado, nota, comentario, data);
         if (!erros.isEmpty()) {
             throw new IllegalArgumentException(String.join("; ", erros));
         }
@@ -30,8 +30,8 @@ public class Avaliacao {
         this.comentario = comentario;
         this.data = data;
     }
-
-    private static List<String> coletarErros(int idAutor, int idAvaliado, int nota, String comentario, LocalDate data) {
+//valido os dados antes de criar uma avaliação
+    public static List<String> validar(int idAutor, int idAvaliado, int nota, String comentario, LocalDate data) {
         List<String> erros = new ArrayList<>();
 
         if (nota < NOTA_MINIMA || nota > NOTA_MAXIMA) {
@@ -43,7 +43,7 @@ public class Avaliacao {
         if (idAvaliado <= 0) {
             erros.add("Id do avaliado deve ser positivo");
         }
-        if (idAutor == idAvaliado) {
+        if (idAutor > 0 && idAutor == idAvaliado) {
             erros.add("Um usuário não pode avaliar a si mesmo");
         }
         if (data == null) {
