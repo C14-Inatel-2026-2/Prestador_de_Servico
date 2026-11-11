@@ -126,14 +126,12 @@ public class ContratanteTest {
     }
 
     @Test
-    void testeContratanteComNotaAbsurdaNaoGeraAvaliacao() {
+    void testeContratanteComNotaAbsurdaLancaExcecaoENaoEntregaAvaliacao() {
         Prestador prestadorMock = Mockito.mock(Prestador.class);
         when(prestadorMock.getId()).thenReturn(8);
-
-        Avaliacao resultado = contratante.avaliarUsuario(prestadorMock, 1000,
-                "Nota mil!!! ;)");
-
-        Assertions.assertNull(resultado);
+        IllegalArgumentException erro = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> contratante.avaliarUsuario(prestadorMock, 1000, "Nota mil ;)"));
+        Assertions.assertTrue(erro.getMessage().contains("Nota deve estar entre 1 e 5"));
         verify(prestadorMock, never()).receberAvaliacao(any());
     }
 
@@ -152,7 +150,6 @@ public class ContratanteTest {
         );
 
     }
-
 
     @Test
     void testeContratanteVingativoDaNotaMinimaSemComentario() {
