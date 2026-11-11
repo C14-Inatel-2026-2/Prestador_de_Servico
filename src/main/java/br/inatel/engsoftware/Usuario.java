@@ -21,7 +21,7 @@ public abstract class Usuario {
     // estavam repetido em contratante e prestador
     private AvaliacaoDAO avaliacaoDAO = new AvaliacaoDAO();
 
-    public Usuario(int id, String nome, String email, String senha, String telefone, CriptografiaService criptografiaService,String cidade) {
+    public Usuario(int id, String nome, String email, String senha, String telefone,CriptografiaService criptografiaService,String cidade) {
         this.id = id;
         this.nome = nome;
         this.email = email;
@@ -31,37 +31,22 @@ public abstract class Usuario {
         this.senhaHash = this.criptografiaService.gerarHash(senha);
     }
 
-    protected Usuario(int id, String nome, String email, String senha, String telefone, CriptografiaService criptografiaService,String cidade ,boolean senhaJaCriptografada) {
+    protected Usuario(int id, String nome, String email, String senha, String telefone,CriptografiaService criptografiaService,String cidade ,boolean senhaJaCriptografada) {
         this.id = id;
         this.nome = nome;
         this.email = email;
         this.telefone = telefone;
-        this.cidade = cidade;
         this.criptografiaService = Objects.requireNonNull(criptografiaService);
+        this.cidade = cidade;
         this.senhaHash = senhaJaCriptografada
                 ? Objects.requireNonNull(senha)
                 : this.criptografiaService.gerarHash(senha);
     }
 
-    // ===================== INJEÇÃO DE DEPENDÊNCIA [MUDANÇA 1] =====================
 
     public void definirAvaliacaoDAO(AvaliacaoDAO avaliacaoDAO) {
         this.avaliacaoDAO = Objects.requireNonNull(avaliacaoDAO);
     }
-
-    public void definirServicoDAO(ServicoDAO servicoDAO) {
-        this.servicoDAO = Objects.requireNonNull(servicoDAO);
-    }
-
-    // protected: só as filhas usam o ServicoDAO (cada uma para uma coisa diferente)
-    protected ServicoDAO getServicoDAO() {
-        return servicoDAO;
-    }
-
-    void definirAvaliacaoDAO(AvaliacaoDAO avaliacaoDAO) {
-        this.avaliacaoDAO = Objects.requireNonNull(avaliacaoDAO);
-    }
-
 
     public int getId() { return id; }
 
@@ -75,7 +60,7 @@ public abstract class Usuario {
     public void setTelefone(String telefone) { this.telefone = telefone; }
 
     public String getCidade() { return cidade; }
-    public void setCidade(String cidade) { this.nome = cidade; }
+    public void setCidade(String cidade) { this.cidade = cidade; }
 
     public double getNotamedia() { return notamedia; }
 

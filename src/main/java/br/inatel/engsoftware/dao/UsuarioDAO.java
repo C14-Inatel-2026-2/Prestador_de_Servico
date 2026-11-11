@@ -437,9 +437,9 @@ public class UsuarioDAO {
                     senhaHash,
                     telefone,
                     criptografiaService,
+                    cidade,
                     rs.getString("profissao"),
                     rs.getString("descricao"),
-                    cidade,
                     rs.getDouble("valor_hora"),
                     true
             );
