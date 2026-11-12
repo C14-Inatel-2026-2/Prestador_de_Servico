@@ -75,15 +75,7 @@ public class Prestador extends Usuario {
 
     // Associa um serviço ao prestador no banco de dados
     public void cadastrarServico(int idServico, double precoCobrado) {
-        if (this.getId() <= 0) {
-            throw new IllegalStateException(
-                    "O prestador precisa estar cadastrado.");
-        }
-
-        if (idServico <= 0) {
-            throw new IllegalArgumentException(
-                    "O ID do serviço deve ser positivo.");
-        }
+        validarServicoDoPrestador(idServico);
 
         if (!Double.isFinite(precoCobrado) || precoCobrado < 0) {
             throw new IllegalArgumentException(
@@ -107,15 +99,7 @@ public class Prestador extends Usuario {
     // Remover associação entre prestador e serviço
     public boolean removerServico(int idServico) {
 
-        if (this.getId() <= 0) {
-            throw new IllegalStateException(
-                    "O prestador precisa estar cadastrado.");
-        }
-
-        if (idServico <= 0) {
-            throw new IllegalArgumentException(
-                    "O ID do serviço deve ser positivo.");
-        }
+        validarServicoDoPrestador(idServico);
 
         try {
             return servicoDAO.desassociarPrestador(
@@ -126,6 +110,17 @@ public class Prestador extends Usuario {
         } catch (SQLException e) {
             throw new IllegalStateException(
                     "Erro ao remover serviço do prestador.", e);
+        }
+    }
+
+    private void validarServicoDoPrestador(int idServico) {
+        if (this.getId() <= 0) {
+            throw new IllegalStateException(
+                    "O prestador precisa estar cadastrado.");
+        }
+        if (idServico <= 0) {
+            throw new IllegalArgumentException(
+                    "O ID do serviço deve ser positivo.");
         }
     }
 
