@@ -146,15 +146,19 @@ public class Prestador extends Usuario {
         System.out.println("Descrição: " + descricao);
         System.out.println("Valor/hora: R$ " + valorHora);
         System.out.println("Serviços: ");
+        imprimirServicosCadastrados();
+    }
 
-        if (this.getId() > 0) {
-            try {
-                for (ServicoDAO.ServicoPrestado item : listarServicosCadastrados()) {
-                    System.out.println("- " + item.servico().getNome() + " | Preço cobrado: R$ " + item.precoCobrado());
-                }
-            } catch (IllegalStateException e) {
-                System.out.println("(Aviso: não foi possível carregar os serviços agora.)");
+    private void imprimirServicosCadastrados() {
+        if (this.getId() <= 0) {
+            return;
+        }
+        try {
+            for (ServicoDAO.ServicoPrestado item : listarServicosCadastrados()) {
+                System.out.println("- " + item.servico().getNome() + " | Preço cobrado: R$ " + item.precoCobrado());
             }
+        } catch (IllegalStateException e) {
+            System.out.println("(Aviso: não foi possível carregar os serviços agora.)");
         }
     }
 }
