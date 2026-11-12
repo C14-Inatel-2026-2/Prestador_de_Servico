@@ -44,7 +44,7 @@ public abstract class Usuario {
     }
 
 
-    public void definirAvaliacaoDAO(AvaliacaoDAO avaliacaoDAO) {
+    void definirAvaliacaoDAO(AvaliacaoDAO avaliacaoDAO) {
         this.avaliacaoDAO = Objects.requireNonNull(avaliacaoDAO);
     }
 
@@ -67,7 +67,7 @@ public abstract class Usuario {
     public String getSenhaHash() { return senhaHash; }
 
     public boolean login(String emailDigitado, String senhaDigitada) {
-        boolean emailCorreto = this.email.equals(emailDigitado);
+        boolean emailCorreto = Objects.equals(this.email, emailDigitado);
         boolean senhaCorreta = this.criptografiaService.verificarSenha(senhaDigitada, this.senhaHash);
         return emailCorreto && senhaCorreta;
     }
@@ -190,12 +190,6 @@ public abstract class Usuario {
         System.out.println("Cidade: " + cidade);
         System.out.println("Nota: " + notamedia);
     }
-
-
-
-
-
-
 
 
 }
