@@ -23,7 +23,6 @@ public class ContratanteTest {
     private CriptografiaService criptografiaMock;
     private AvaliacaoDAO avaliacaoDAOMock;
     private ServicoDAO servicoDAOMock;
-    private AvaliacaoDAO AvaliacaoDAOMock;
 
     @BeforeEach
     void setUp() {
@@ -185,12 +184,12 @@ public class ContratanteTest {
 
         Avaliacao avaliacao = contratanteReal.avaliarUsuario(prestadorReal, 1, "   ");
 
-        Assertions.assertNotNull(avaliacao);
         Assertions.assertAll(
                 () -> Assertions.assertEquals(2, avaliacao.getIdAutor()),
                 () -> Assertions.assertEquals(8, avaliacao.getIdAvaliado()),
                 () -> Assertions.assertEquals(1, avaliacao.getNota()),
-                () -> Assertions.assertTrue(avaliacao.formatar().endsWith("sem comentario"))
+                () -> Assertions.assertTrue(avaliacao.formatar().endsWith("sem comentario")),
+                () -> Assertions.assertEquals(1.0, prestadorReal.getNotamedia(), 0.0001)
         );
     }
 
