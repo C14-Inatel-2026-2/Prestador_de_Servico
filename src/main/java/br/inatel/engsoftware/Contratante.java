@@ -40,9 +40,4 @@ public class Contratante extends Usuario {
         return registrarAvaliacao(prestador, nota, comentario);
     }
 
-    @Override
-    public void exibirPerfil() {
-        super.exibirPerfil();
-    }
-
 }
