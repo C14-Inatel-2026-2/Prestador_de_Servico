@@ -56,4 +56,18 @@ class ContratanteFalhasBancoTest {
         assertSame(falhaNaMedia, erro.getCause());
         verify(prestadorMock, times(1)).receberAvaliacao(argThat(avaliacao -> avaliacao.getId() == 10));
     }
+
+    @Test
+    void testeBuscarPrestadorComFalhaNoBancoLancaIllegalStateException() throws SQLException {
+        // Arrange: o banco vai falhar na busca de prestadores
+        SQLException erroDoBanco = new SQLException("conexão perdida");
+        when(servicoDAOMock.buscarPrestadores("Eletricista")).thenThrow(erroDoBanco);
+
+        // Act + Assert: a falha chega como IllegalStateException, não como SQLException
+        IllegalStateException erro = assertThrows(IllegalStateException.class,
+                () -> contratante.buscarPrestador("Eletricista"));
+
+        assertEquals("Erro ao buscar prestadores no banco", erro.getMessage());
+        assertSame(erroDoBanco, erro.getCause());
+    }
 }
