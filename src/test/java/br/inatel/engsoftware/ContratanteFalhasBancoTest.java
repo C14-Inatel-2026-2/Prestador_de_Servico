@@ -41,4 +41,19 @@ class ContratanteFalhasBancoTest {
         verify(avaliacaoDAOMock, times(1)).inserir(any(Avaliacao.class));
         verify(prestadorMock, never()).receberAvaliacao(any(Avaliacao.class));
     }
+
+    @Test
+    void testeAvaliarUsuarioSalvaMasMediaFalhaInformaIdDaAvaliacaoSalva() throws SQLException {
+        when(avaliacaoDAOMock.inserir(any(Avaliacao.class))).thenReturn(10);
+        Prestador prestadorMock = Mockito.mock(Prestador.class);
+        when(prestadorMock.getId()).thenReturn(8);
+        IllegalStateException falhaNaMedia = new IllegalStateException("Erro ao calcular a nota média.");
+        doThrow(falhaNaMedia).when(prestadorMock).receberAvaliacao(any(Avaliacao.class));
+        IllegalStateException erro = assertThrows(IllegalStateException.class,
+                () -> contratante.avaliarUsuario(prestadorMock, 4, "Bom serviço."));
+        assertEquals("A avaliação foi salva (id 10), mas não foi possível atualizar a média do avaliado.",
+                erro.getMessage());
+        assertSame(falhaNaMedia, erro.getCause());
+        verify(prestadorMock, times(1)).receberAvaliacao(argThat(avaliacao -> avaliacao.getId() == 10));
+    }
 }
