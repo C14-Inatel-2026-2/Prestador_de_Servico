@@ -152,4 +152,24 @@ class MenuTest {
         assertTrue(tela.contains("Ate logo!"));
         assertFalse(tela.contains("Entrada encerrada."));
     }
+
+    @Test
+    void testeCancelarLoginDigitandoZeroNoEmailNaoConsultaOBanco() {
+        String digitado = String.join("\n",
+                "2",
+                "0",
+                "",
+                "0"
+        ) + "\n";
+        String tela = executarMenuCom(digitado);
+        assertTrue(tela.contains(" Login"));
+        assertTrue(tela.contains("Digite 0 no email para cancelar."));
+        assertTrue(tela.contains("[AVISO] Operacao cancelada."));
+        assertFalse(tela.contains("Senha: "));
+        assertFalse(tela.contains("[OK]"));
+        assertFalse(tela.contains("[ERRO]"));
+        assertFalse(tela.contains("Logado:"));
+        assertTrue(tela.contains("Ate logo!"));
+        assertFalse(tela.contains("Entrada encerrada."));
+    }
 }
