@@ -9,6 +9,11 @@ import java.util.Scanner;
 
 public class Menu {
 
+    @FunctionalInterface
+    private interface Acao {
+        void executar() throws SQLException;
+    }
+
     private final Scanner entrada = new Scanner(System.in);
     private final UsuarioDAO usuarioDAO = new UsuarioDAO();
     private final ServicoDAO servicoDAO = new ServicoDAO();
@@ -16,63 +21,135 @@ public class Menu {
 
     private Usuario logado = null;
 
+    //  MENU PRINCIPAL
+
     public void executar() {
         boolean rodando = true;
 
         while (rodando) {
-            exibirMenu();
+            System.out.println();
+            System.out.println("========== MENU PRINCIPAL ==========");
+            System.out.println("1 - Cadastrar usuario");
+            System.out.println("2 - Fazer login");
+            System.out.println("0 - Sair");
+
             int opcao = lerInteiro("Escolha uma opcao: ");
 
-            if (opcao == 0) {
-                rodando = false;
-            } else {
-                executarOpcao(opcao);
+            switch (opcao) {
+                case 1 -> menuCadastro();
+                case 2 -> {
+                    executarComTratamento(this::fazerLogin);
+                    if (logado instanceof Contratante) {
+                        menuContratante();
+                    } else if (logado instanceof Prestador) {
+                        menuPrestador();
+                    }
+                }
+                case 0 -> rodando = false;
+                default -> System.out.println("Opcao invalida.");
             }
         }
 
         System.out.println("Ate logo!");
     }
 
-    private void exibirMenu() {
-        System.out.println();
-        System.out.println("====== MENU ======");
-        System.out.println("Usuario logado: " + (logado == null ? "ninguem" : logado.getNome()));
-        System.out.println("1 - Cadastrar contratante");
-        System.out.println("2 - Cadastrar prestador");
-        System.out.println("3 - Login");
-        System.out.println("4 - Ver meu perfil");
-        System.out.println("5 - (contratante) Buscar prestador");
-        System.out.println("6 - (contratante) Avaliar prestador");
-        System.out.println("7 - (prestador) Avaliar contratante");
-        System.out.println("8 - (prestador) Cadastrar / listar servicos");
-        System.out.println("9 - Ver avaliacoes recebidas e feitas");
-        System.out.println("0 - Sair");
+    //  CADASTRO
+
+    private void menuCadastro() {
+        boolean voltar = false;
+
+        while (!voltar) {
+            System.out.println();
+            System.out.println("========== CADASTRAR USUARIO ==========");
+            System.out.println("1 - Contratante");
+            System.out.println("2 - Prestador");
+            System.out.println("0 - Voltar");
+
+            int opcao = lerInteiro("Escolha o tipo de usuario: ");
+
+            switch (opcao) {
+                case 1 -> executarComTratamento(this::cadastrarContratante);
+                case 2 -> executarComTratamento(this::cadastrarPrestador);
+                case 0 -> voltar = true;
+                default -> System.out.println("Opcao invalida.");
+            }
+        }
     }
 
-    // Tratamento de erros:
-    // IllegalArgumentException: mostra a mensagem e pede os dados de novo.
-    // IllegalStateException: mostra a mensagem e volta ao menu.
-    // SQLException: mostra a mensagem de erro do banco e volta ao menu.
-    // NumberFormatException: tratada em lerInteiro e lerDouble, que pedem de novo.
-    private void executarOpcao(int opcao) {
+    //  MENU DO CONTRATANTE
+
+    private void menuContratante() {
+        boolean voltar = false;
+
+        while (!voltar) {
+            System.out.println();
+            System.out.println("========== MENU CONTRATANTE ==========");
+            System.out.println("Logado como: " + logado.getNome());
+            System.out.println("1 - Buscar prestador");
+            System.out.println("2 - Avaliar prestador");
+            System.out.println("3 - Ver meu perfil");
+            System.out.println("4 - Ver avaliacoes recebidas e feitas");
+            System.out.println("0 - Voltar (sair da conta)");
+
+            int opcao = lerInteiro("Escolha uma opcao: ");
+
+            switch (opcao) {
+                case 1 -> executarComTratamento(this::buscarPrestador);
+                case 2 -> executarComTratamento(this::avaliarPrestador);
+                case 3 -> executarComTratamento(this::verPerfil);
+                case 4 -> executarComTratamento(this::verAvaliacoes);
+                case 0 -> {
+                    logado = null;
+                    voltar = true;
+                    System.out.println("Voce saiu da conta.");
+                }
+                default -> System.out.println("Opcao invalida.");
+            }
+        }
+    }
+
+    // MENU DO PRESTADOR
+
+    private void menuPrestador() {
+        boolean voltar = false;
+
+        while (!voltar) {
+            System.out.println();
+            System.out.println("========== MENU PRESTADOR ==========");
+            System.out.println("Logado como: " + logado.getNome());
+            System.out.println("1 - Ver meu perfil");
+            System.out.println("2 - Cadastrar / listar servicos");
+            System.out.println("3 - Avaliar contratante");
+            System.out.println("4 - Ver avaliacoes recebidas e feitas");
+            System.out.println("0 - Voltar (sair da conta)");
+
+            int opcao = lerInteiro("Escolha uma opcao: ");
+
+            switch (opcao) {
+                case 1 -> executarComTratamento(this::verPerfil);
+                case 2 -> executarComTratamento(this::cadastrarEListarServicos);
+                case 3 -> executarComTratamento(this::avaliarContratante);
+                case 4 -> executarComTratamento(this::verAvaliacoes);
+                case 0 -> {
+                    logado = null;
+                    voltar = true;
+                    System.out.println("Voce saiu da conta.");
+                }
+                default -> System.out.println("Opcao invalida.");
+            }
+        }
+    }
+
+    //  TRATAMENTO DE ERROS
+
+    private void executarComTratamento(Acao acao) {
         boolean tentarNovamente;
 
         do {
             tentarNovamente = false;
 
             try {
-                switch (opcao) {
-                    case 1 -> cadastrarContratante();
-                    case 2 -> cadastrarPrestador();
-                    case 3 -> login();
-                    case 4 -> verPerfil();
-                    case 5 -> buscarPrestador();
-                    case 6 -> avaliarPrestador();
-                    case 7 -> avaliarContratante();
-                    case 8 -> cadastrarEListarServicos();
-                    case 9 -> verAvaliacoes();
-                    default -> System.out.println("Opcao invalida.");
-                }
+                acao.executar();
             } catch (IllegalArgumentException e) {
                 System.out.println("Dado invalido: " + e.getMessage());
                 System.out.println("Digite novamente.");
@@ -84,6 +161,8 @@ public class Menu {
             }
         } while (tentarNovamente);
     }
+
+    // AÇÕES: CADASTRO E LOGIN
 
     private void cadastrarContratante() throws SQLException {
         System.out.println("--- Cadastro de contratante ---");
@@ -117,7 +196,7 @@ public class Menu {
         System.out.println("Prestador cadastrado com ID " + prestador.getId() + ".");
     }
 
-    private void login() throws SQLException {
+    private void fazerLogin() throws SQLException {
         System.out.println("--- Login ---");
         String email = lerTexto("Email: ");
         String senha = lerTexto("Senha: ");
@@ -132,17 +211,11 @@ public class Menu {
         }
     }
 
-    private void verPerfil() {
-        if (logado == null) {
-            System.out.println("Faca login para ver o perfil.");
-            return;
-        }
-        logado.exibirPerfil();
-    }
+    // AÇÕES DO CONTRATANTE
 
     private void buscarPrestador() {
         if (!(logado instanceof Contratante contratante)) {
-            System.out.println("Faca login como contratante para buscar prestadores.");
+            System.out.println("Acesso restrito a contratantes.");
             return;
         }
 
@@ -157,7 +230,7 @@ public class Menu {
 
     private void avaliarPrestador() {
         if (!(logado instanceof Contratante contratante)) {
-            System.out.println("Faca login como contratante para avaliar prestadores.");
+            System.out.println("Acesso restrito a contratantes.");
             return;
         }
 
@@ -181,9 +254,11 @@ public class Menu {
         System.out.println("Avaliacao registrada: " + avaliacao.formatar());
     }
 
+    // AÇÕES DO PRESTADOR
+
     private void avaliarContratante() throws SQLException {
         if (!(logado instanceof Prestador prestador)) {
-            System.out.println("Faca login como prestador para avaliar contratantes.");
+            System.out.println("Acesso restrito a prestadores.");
             return;
         }
 
@@ -203,12 +278,19 @@ public class Menu {
 
     private void cadastrarEListarServicos() throws SQLException {
         if (!(logado instanceof Prestador prestador)) {
-            System.out.println("Faca login como prestador para gerenciar servicos.");
+            System.out.println("Acesso restrito a prestadores.");
             return;
         }
 
-        servicoDAO.listarTodos().forEach(
-                s -> System.out.println("ID " + s.getId() + " - " + s.formatar()));
+        List<Servico> servicos = servicoDAO.listarTodos();
+        if (servicos.isEmpty()) {
+            System.out.println("Nenhum servico cadastrado no sistema.");
+            return;
+        }
+
+        for (Servico servico : servicos) {
+            System.out.println("ID " + servico.getId() + " - " + servico.formatar());
+        }
 
         int idServico = lerInteiro("ID do servico que voce oferece (0 para voltar): ");
         if (idServico == 0) {
@@ -220,12 +302,12 @@ public class Menu {
         System.out.println("Servico cadastrado com sucesso.");
     }
 
-    private void verAvaliacoes() {
-        if (logado == null) {
-            System.out.println("Faca login para ver as avaliacoes.");
-            return;
-        }
 
+    private void verPerfil() {
+        logado.exibirPerfil();
+    }
+
+    private void verAvaliacoes() {
         System.out.println("--- Avaliacoes recebidas ---");
         for (Avaliacao avaliacao : logado.listarAvaliacoesRecebidas()) {
             System.out.println(avaliacao.formatar());
@@ -237,7 +319,7 @@ public class Menu {
         }
     }
 
-    // Auxiliares
+    // AUXILIARES
 
     private List<Prestador> buscarLista(Contratante contratante) {
         String termo = lerTexto("Buscar por profissao ou servico: ");
@@ -251,7 +333,7 @@ public class Menu {
         }
     }
 
-    // Entrada de dados
+    //  ENTRADA DE DADOS
 
     private String lerTexto(String pergunta) {
         System.out.print(pergunta);
