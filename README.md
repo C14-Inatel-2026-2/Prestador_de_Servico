@@ -102,6 +102,42 @@ Nesta seção estão documentadas as melhorias realizadas no código.
 
 - **Link do PR:** [#75 - Extração de Método](https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/pull/75)
 
+### 3. Extração da validação comum de `cadastrarServico` e `removerServico` na classe Prestador
+
+> Os dois métodos começavam com as mesmas duas verificações antes de acessar o banco.
+
+- **Code Smell:** Código duplicado. `cadastrarServico(int, double)` e `removerServico(int)` repetiam a checagem de que o prestador já está cadastrado (`id > 0`) e de que o ID do serviço é positivo.
+
+- **Refactoring aplicado:** Extract Method. As duas verificações foram para o método privado `validarServicoDoPrestador(int idServico)`, chamado no início dos dois métodos.
+
+- **Por que essa alteração foi feita?:** Com a regra em um lugar só, uma mudança futura (por exemplo, outra mensagem de erro) é feita uma vez e vale para os dois métodos. Os testes existentes do `Prestador` passaram antes e depois sem nenhuma alteração, o que mostra que o comportamento foi preservado.
+
+- **Link do PR:** [#73 - Validação comum no Prestador](https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/pull/73)
+
+### 4. Extração da impressão dos serviços no `exibirPerfil` da classe Prestador
+
+> O método misturava a impressão dos dados do perfil com a consulta ao banco e o tratamento de falha.
+
+- **Code Smell:** Long Method, com níveis de abstração misturados. O `exibirPerfil()` imprimia os campos do perfil e, no meio, tinha um `if`, um `try/catch` e um laço que consultava e listava os serviços do banco.
+
+- **Refactoring aplicado:** Extract Method. O trecho dos serviços virou o método privado `imprimirServicosCadastrados()`, com uma *guard clause* (`if (getId() <= 0) return;`) no lugar do `if` que envolvia todo o bloco.
+
+- **Por que essa alteração foi feita?:** O `exibirPerfil()` passou a ler como uma lista do que é exibido, e a regra "só prestador salvo no banco tem serviços; se o banco falhar, mostra um aviso" ficou isolada e com um nome que a explica. A saída na tela continua a mesma.
+
+- **Link do PR:** [#80 - Refatorações no Prestador](https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/pull/80)
+
+### 5. Extração do tratamento de `SQLException` na classe Prestador
+
+> Três métodos repetiam o mesmo `try/catch` que transforma erro de banco em `IllegalStateException`.
+
+- **Code Smell:** Código duplicado. `cadastrarServico`, `removerServico` e `listarServicosCadastrados` tinham, cada um, um bloco `try { ... } catch (SQLException e) { throw new IllegalStateException(mensagem, e); }` igual, mudando só a mensagem.
+
+- **Refactoring aplicado:** Extract Method com interfaces funcionais. O `try/catch` foi para os métodos privados `consultarNoBanco` (operações que devolvem valor) e `executarNoBanco` (operações sem retorno). Cada método público passa só a mensagem de erro e a operação, como lambda. Foram criadas duas interfaces funcionais privadas que aceitam `throws SQLException`, porque as interfaces prontas do Java (`Supplier`, `Runnable`) não permitem exceção checada.
+
+- **Por que essa alteração foi feita?:** A regra "erro de banco vira `IllegalStateException`, com mensagem e causa original" ficou num único lugar. Os testes do `PrestadorFalhasBancoTest` conferem, para os três métodos, a mensagem e que a `SQLException` original continua como causa (`assertSame`), o que garante que o comportamento não mudou.
+
+- **Link do PR:** [#80 - Refatorações no Prestador](https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/pull/80)
+
 
 ---
 
@@ -143,6 +179,7 @@ As conversas abaixo documentam algumas das interações realizadas durante o des
 - [02 - Descrição do assunto abordado](LINK_DA_CONVERSA)
 
 **4. Correção de erros e resolução de dúvidas**
+- [Registro de estudo da Anna: dúvidas sobre o projeto tiradas com o Claude, de 17/10 a 13/11 (PDF)](https://drive.google.com/file/d/1bpaavvzRE4e_4XegEV3Vk19_LpPPy-7V/view?usp=sharing)
 - [01 - Descrição do assunto abordado](LINK_DA_CONVERSA)
 - [02 - Descrição do assunto abordado](LINK_DA_CONVERSA)
 
