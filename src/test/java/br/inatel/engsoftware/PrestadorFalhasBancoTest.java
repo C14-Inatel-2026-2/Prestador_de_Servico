@@ -43,4 +43,14 @@ class PrestadorFalhasBancoTest {
         assertEquals("Erro ao cadastrar serviço do prestador.", erro.getMessage());
         assertSame(erroDoBanco, erro.getCause());
     }
+
+    @Test
+    void testeRemoverServicoComFalhaNoBancoLancaIllegalStateException() throws SQLException {
+        SQLException erroDoBanco = new SQLException("conexão perdida");
+        when(servicoDAOMock.desassociarPrestador(1, 5)).thenThrow(erroDoBanco);
+        IllegalStateException erro = assertThrows(IllegalStateException.class,
+                () -> prestador.removerServico(5));
+        assertEquals("Erro ao remover serviço do prestador.", erro.getMessage());
+        assertSame(erroDoBanco, erro.getCause());
+    }
 }
