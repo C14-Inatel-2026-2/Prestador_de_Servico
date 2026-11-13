@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -46,30 +47,22 @@ class AvaliacaoDAOListagemTest {
 
     @Test
     void deveListarAvaliacoesRecebidasPeloAvaliado() throws SQLException {
-        // Arrange: o banco devolve duas avaliações recebidas pelo usuário 2
         when(connectionMock.prepareStatement(anyString())).thenReturn(stmtMock);
         when(stmtMock.executeQuery()).thenReturn(rsMock);
         when(rsMock.next()).thenReturn(true, true, false);
-
         when(rsMock.getObject("data_avaliacao", LocalDate.class)).thenReturn(LocalDate.now());
         when(rsMock.getInt("id_avaliacao")).thenReturn(11, 12);
         when(rsMock.getInt("id_avaliador")).thenReturn(5, 6);
         when(rsMock.getInt("id_avaliado")).thenReturn(2, 2);
         when(rsMock.getInt("nota")).thenReturn(5, 3);
         when(rsMock.getString("comentario")).thenReturn("Excelente", "Atrasou um pouco");
-
-        // Act
         List<Avaliacao> recebidas = avaliacaoDAO.listarPorAvaliado(2);
-
-        // Assert: as duas linhas viraram objetos Avaliacao, na ordem do banco
         assertEquals(2, recebidas.size());
         assertEquals(11, recebidas.get(0).getId());
         assertEquals(5, recebidas.get(0).getNota());
         assertEquals(12, recebidas.get(1).getId());
         assertEquals("Atrasou um pouco", recebidas.get(1).getComentario());
         assertTrue(recebidas.stream().allMatch(a -> a.getIdAvaliado() == 2));
-
-        // Assert: a consulta filtrou pelo avaliado certo
         verify(stmtMock).setInt(1, 2);
     }
 
@@ -114,5 +107,31 @@ class AvaliacaoDAOListagemTest {
 
         assertTrue(erro.getMessage().startsWith("Avaliação inválida no banco:"));
         assertInstanceOf(IllegalArgumentException.class, erro.getCause());
+    }
+
+    @Test
+    void deveListarTodasAsAvaliacoesSemFiltro() throws SQLException {
+        // Arrange: o banco devolve duas avaliações de usuários diferentes
+        when(connectionMock.prepareStatement(anyString())).thenReturn(stmtMock);
+        when(stmtMock.executeQuery()).thenReturn(rsMock);
+        when(rsMock.next()).thenReturn(true, true, false);
+
+        when(rsMock.getObject("data_avaliacao", LocalDate.class)).thenReturn(LocalDate.now());
+        when(rsMock.getInt("id_avaliacao")).thenReturn(1, 2);
+        when(rsMock.getInt("id_avaliador")).thenReturn(5, 6);
+        when(rsMock.getInt("id_avaliado")).thenReturn(2, 3);
+        when(rsMock.getInt("nota")).thenReturn(4, 2);
+        when(rsMock.getString("comentario")).thenReturn("Bom", "Ruim");
+
+        // Act
+        List<Avaliacao> todas = avaliacaoDAO.listarTodas();
+
+        // Assert: trouxe as avaliações dos dois avaliados, na ordem do banco
+        assertEquals(2, todas.size());
+        assertEquals(2, todas.get(0).getIdAvaliado());
+        assertEquals(3, todas.get(1).getIdAvaliado());
+
+        // Assert: diferente do listarPorAvaliado, não há filtro, então nenhum ? é preenchido
+        verify(stmtMock, never()).setInt(anyInt(), anyInt());
     }
 }
