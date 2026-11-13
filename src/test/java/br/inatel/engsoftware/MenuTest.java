@@ -92,4 +92,64 @@ class MenuTest {
         assertTrue(tela.contains("Ate logo!"));
         assertFalse(tela.contains("Entrada encerrada."));
     }
+
+    @Test
+    void testeCadastroDePrestadorValidaValorPorHoraEConfirmacaoECancelaSemSalvar() {
+        String digitado = String.join("\n",
+                "1",
+                "2",
+                "Carlos Lima",
+                "carlos@email.com",
+                "senha123",
+                "senha123",
+                "35 98888-7777",
+                "Pouso Alegre",
+                "Eletricista",
+                "Instalacoes residenciais",
+                "abc",
+                "-5",
+                "80,50",
+                "talvez",
+                "n",
+                "",
+                "0",
+                "0"
+        ) + "\n";
+
+        String tela = executarMenuCom(digitado);
+        assertTrue(tela.contains("Cadastro de prestador"));
+        assertTrue(tela.contains("Profissao (ex.: Encanador): "));
+        assertTrue(tela.contains("Descricao dos servicos: "));
+        assertTrue(tela.contains("[AVISO] Digite um valor numerico, por exemplo 150 ou 150,00."));
+        assertTrue(tela.contains("[AVISO] O valor deve ser maior que zero."));
+        assertTrue(tela.contains("Confirmar cadastro de Carlos Lima? (s/n): "));
+        assertTrue(tela.contains("[AVISO] Responda s para confirmar ou n para cancelar."));
+        assertTrue(tela.contains("[AVISO] Operacao cancelada."));
+        assertFalse(tela.contains("[OK]"));
+        assertFalse(tela.contains("[ERRO]"));
+        assertTrue(tela.contains("Ate logo!"));
+        assertFalse(tela.contains("Entrada encerrada."));
+    }
+
+    @Test
+    void testeCancelarDigitandoZeroNoPrimeiroCampoEOpcaoInvalidaNoSubmenu() {
+        String digitado = String.join("\n",
+                "1",
+                "7",
+                "1",
+                "0",
+                "",
+                "0",
+                "0"
+        ) + "\n";
+
+        String tela = executarMenuCom(digitado);
+        assertTrue(tela.contains("[AVISO] Opcao invalida." + System.lineSeparator()));
+        assertFalse(tela.contains("Escolha um numero da lista."));
+        assertTrue(tela.contains("Digite 0 em um campo de texto para cancelar."));
+        assertTrue(tela.contains("[AVISO] Operacao cancelada."));
+        assertFalse(tela.contains("Email: "));
+        assertTrue(tela.contains("Ate logo!"));
+        assertFalse(tela.contains("Entrada encerrada."));
+    }
 }
