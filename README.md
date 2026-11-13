@@ -52,27 +52,6 @@ Os requisitos funcionais descrevem as funcionalidades essenciais que o sistema d
 
 ## 🛡️ Requisitos Não Funcionais
 
-Os requisitos funcionais descrevem as funcionalidades que o sistema deve disponibilizar aos contratantes e prestadores de serviços.
-
-| Código | Requisito | Descrição |
-| :--- | :--- | :--- |
-| **RF01** | Cadastro de Contratantes | O sistema deve permitir que novos contratantes realizem seu cadastro, informando os dados necessários para a criação de uma conta. |
-| **RF02** | Cadastro de Prestadores | O sistema deve permitir que profissionais realizem seu cadastro na plataforma, registrando suas informações. |
-| **RF03** | Autenticação de Usuários | O sistema deve permitir que contratantes e prestadores realizem login utilizando suas credenciais cadastradas. |
-| **RF04** | Alteração de Senha | O sistema deve permitir que o usuário altere sua senha de acesso, mediante validação de sua senha atual. |
-| **RF05** | Cadastro de Serviços | O sistema deve permitir que os prestadores cadastrem os serviços que oferecem, informando os respectivos valores cobrados. |
-| **RF06** | Pesquisa de Prestadores | O sistema deve permitir que os contratantes pesquisem prestadores de acordo com a profissão ou categoria de serviço desejada. |
-| **RF07** | Consulta de Informações dos Prestadores | O sistema deve apresentar informações dos prestadores cadastrados, incluindo os serviços oferecidos, os valores cobrados e suas respectivas notas médias. |
-| **RF08** | Avaliação de Prestadores | O sistema deve permitir que os contratantes avaliem os prestadores após a realização de um serviço, atribuindo uma nota de 1 a 5 e registrando um comentário. |
-| **RF09** | Atualização da Nota Média | O sistema deve atualizar a nota média do prestador considerando as avaliações recebidas. |
-| **RF10** | Consulta de Avaliações Recebidas | O sistema deve permitir que os prestadores consultem as avaliações realizadas pelos contratantes. |
-| **RF11** | Avaliação de Contratantes | O sistema deve permitir que os prestadores registrem avaliações dos contratantes, possibilitando a avaliação de ambas as partes envolvidas na prestação do serviço. |
-| **RF12** | Histórico de Avaliações do Contratante | O sistema deve permitir que os contratantes consultem as avaliações que já realizaram para os prestadores. |
-
----
-
-## 🛡️ Requisitos Não Funcionais
-
 Os requisitos não funcionais descrevem características de qualidade, segurança e desempenho que devem ser consideradas no desenvolvimento e funcionamento da aplicação.
 
 | Código | Requisito | Descrição |
