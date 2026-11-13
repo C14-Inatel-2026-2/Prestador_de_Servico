@@ -172,4 +172,15 @@ class MenuTest {
         assertTrue(tela.contains("Ate logo!"));
         assertFalse(tela.contains("Entrada encerrada."));
     }
+
+    @Test
+    void testeMainAbreOMenuESaiQuandoDigitaZero() {
+        System.setIn(new ByteArrayInputStream("0\n".getBytes(StandardCharsets.UTF_8)));
+        ByteArrayOutputStream saida = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(saida, true, StandardCharsets.UTF_8));
+        Main.main(new String[0]);
+        String tela = saida.toString(StandardCharsets.UTF_8);
+        assertTrue(tela.contains("Menu principal"));
+        assertTrue(tela.contains("Ate logo!"));
+    }
 }
