@@ -55,4 +55,41 @@ class MenuTest {
         assertTrue(tela.contains("Entrada encerrada."));
         assertTrue(tela.contains("Ate logo!"));
     }
+
+    @Test
+    void testeCadastroDeContratanteValidaCadaCampoECancelaSemSalvar() {
+        String digitado = String.join("\n",
+                "1",
+                "1",
+                "",
+                "Ana Souza",
+                "email-ruim",
+                "ana@email.com",
+                "123",
+                "senha123",
+                "outra123",
+                "senha123",
+                "senha123",
+                "123",
+                "35 99999-9999",
+                "Santa Rita",
+                "n",
+                "",
+                "0",
+                "0"
+        ) + "\n";
+        String tela = executarMenuCom(digitado);
+        assertTrue(tela.contains("Cadastro de contratante"));
+        assertTrue(tela.contains("[AVISO] Este campo e obrigatorio."));
+        assertTrue(tela.contains("[AVISO] Email invalido. Exemplo: nome@dominio.com"));
+        assertTrue(tela.contains("[AVISO] A senha precisa ter pelo menos 6 caracteres."));
+        assertTrue(tela.contains("[AVISO] As senhas nao conferem. Tente novamente."));
+        assertTrue(tela.contains("[AVISO] Telefone invalido. Informe DDD e numero (10 ou 11 digitos)."));
+        assertTrue(tela.contains("Confirmar cadastro de Ana Souza? (s/n): "));
+        assertTrue(tela.contains("[AVISO] Operacao cancelada."));
+        assertFalse(tela.contains("[OK]"));
+        assertFalse(tela.contains("[ERRO]"));
+        assertTrue(tela.contains("Ate logo!"));
+        assertFalse(tela.contains("Entrada encerrada."));
+    }
 }
