@@ -112,8 +112,41 @@ Nesta seção estão documentadas as melhorias realizadas no código.
 
 ---
 
-## 🤖 Uso de IA 
- Foram utilizados modelos de IA como:
-* Chat GPT Plus - utilizado para fazer códigos e testes:
-[1](https://chatgpt.com/share/6af72606-bd44-83e8-9fe1-f14d09ea765f), [2](https://chatgpt.com/share/6af7269a-de4c-83e8-b2f8-6887ba51d795), [3](https://chatgpt.com/share/6af726de-bebc-83e9-bf4c-fbb17520548d), [4](https://chatgpt.com/share/6af726de-bebc-83e9-bf4c-fbb17520548d)
 
+## 🤖 Uso de Inteligência Artificial (IA)
+
+Durante o desenvolvimento do projeto, foram utilizados modelos de Inteligência Artificial como ferramentas de apoio à implementação, compreensão e resolução de dúvidas técnicas.
+
+A IA foi utilizada para auxiliar na compreensão da estrutura do código, no funcionamento de métodos e comandos, na implementação de funcionalidades, na elaboração de testes e na identificação de possíveis erros. As sugestões fornecidas foram analisadas e adaptadas conforme as necessidades do projeto.
+
+### Ferramentas utilizadas
+
+- **ChatGPT Plus:** utilizado como ferramenta de apoio para esclarecimento de dúvidas técnicas, compreensão da implementação, desenvolvimento de códigos, elaboração de testes e identificação de possíveis melhorias.
+- **Claude:** utilizado para tirar dúvidas sobre como funcionava alguns comandos, utilizado na criação de testes, e na criação de alguns trechos de códigos.
+
+### Histórico de utilização
+
+As conversas abaixo documentam algumas das interações realizadas durante o desenvolvimento do projeto, organizadas de acordo com sua finalidade.
+
+**1. Desenvolvimento e estrutura do código**
+- [01 - Descrição do assunto abordado](LINK_DA_CONVERSA)
+- [02 - Descrição do assunto abordado](LINK_DA_CONVERSA)
+- [03 - Descrição do assunto abordado](LINK_DA_CONVERSA)
+
+**2. Compreensão de métodos, comandos e funcionalidades**
+- [Explicação de como funcionava o gerenciamento de dependencia](https://claude.ai/chat/cfe0fdcc-251d-45ed-a964-4e20e19fb261)
+- [02 - Descrição do assunto abordado](LINK_DA_CONVERSA)
+- [03 - Descrição do assunto abordado](LINK_DA_CONVERSA)
+
+**3. Testes e validações**
+- [Criação de testes unitários](https://chatgpt.com/c/6aa36b2c-eac8-83e9-98fd-e1cea1b2e69c)
+- [02 - Descrição do assunto abordado](LINK_DA_CONVERSA)
+
+**4. Correção de erros e resolução de dúvidas**
+- [01 - Descrição do assunto abordado](LINK_DA_CONVERSA)
+- [02 - Descrição do assunto abordado](LINK_DA_CONVERSA)
+
+**5. Apoio na criação do banco de dados**
+- [Integração do Banco de dados](https://chatgpt.com/share/6af72606-bd44-83e8-9fe1-f14d09ea765f)
+- [Análise na construção do Banco](https://chatgpt.com/share/6af7269a-de4c-83e8-b2f8-6887ba51d795)
+- [Criação do menu relacionado ao Banco](https://chatgpt.com/share/6af726de-bebc-83e9-bf4c-fbb17520548d)
