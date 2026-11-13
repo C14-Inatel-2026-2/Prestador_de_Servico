@@ -47,4 +47,12 @@ class MenuTest {
         assertTrue(tela.contains("Ate logo!"));
         assertFalse(tela.contains("Entrada encerrada."));
     }
+
+    @Test
+    void testeFimDaEntradaEncerraOMenuSemErro() {
+        String tela = executarMenuCom("");
+        assertTrue(tela.contains("Menu principal"));
+        assertTrue(tela.contains("Entrada encerrada."));
+        assertTrue(tela.contains("Ate logo!"));
+    }
 }
