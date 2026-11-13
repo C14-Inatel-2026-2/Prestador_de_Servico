@@ -8,9 +8,7 @@ public class Servico {
     private double precoSugerido;
 
     public Servico(int id, String nome, String descricao, double precoSugerido) {
-        if (precoSugerido < 0) {
-            throw new IllegalArgumentException("O preço sugerido não pode ser negativo.");
-        }
+        validarPreco(precoSugerido);
         this.id = id;
         this.nome = nome;
         this.descricao = descricao;
@@ -28,12 +26,22 @@ public class Servico {
     public void setDescricao(String descricao) { this.descricao = descricao; }
 
     public double getPrecoSugerido() { return precoSugerido; }
+
     public void setPrecoSugerido(double precoSugerido) {
-        if (precoSugerido < 0) {
-            throw new IllegalArgumentException("O preço sugerido não pode ser negativo.");
-        }
+        validarPreco(precoSugerido);
         this.precoSugerido = precoSugerido;
     }
+    private void validarPreco(double preco) {
+        if (preco < 0) {
+            throw new IllegalArgumentException(
+                    "O preço sugerido não pode ser negativo.");
+        }
+    }
+
+
+
+
+
 
     public boolean validar() {
         return nome != null && !nome.isBlank() &&
