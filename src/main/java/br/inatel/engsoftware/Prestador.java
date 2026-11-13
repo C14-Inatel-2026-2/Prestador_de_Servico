@@ -82,17 +82,8 @@ public class Prestador extends Usuario {
                     "O preço cobrado deve ser válido e não negativo.");
         }
 
-        try {
-            servicoDAO.associarPrestador(
-                    this.getId(),
-                    idServico,
-                    precoCobrado
-            );
-
-        } catch (SQLException e) {
-            throw new IllegalStateException(
-                    "Erro ao cadastrar serviço do prestador.", e);
-        }
+        executarNoBanco("Erro ao cadastrar serviço do prestador.",
+                () -> servicoDAO.associarPrestador(this.getId(), idServico, precoCobrado));
     }
 
 
@@ -101,16 +92,8 @@ public class Prestador extends Usuario {
 
         validarServicoDoPrestador(idServico);
 
-        try {
-            return servicoDAO.desassociarPrestador(
-                    this.getId(),
-                    idServico
-            );
-
-        } catch (SQLException e) {
-            throw new IllegalStateException(
-                    "Erro ao remover serviço do prestador.", e);
-        }
+        return consultarNoBanco("Erro ao remover serviço do prestador.",
+                () -> servicoDAO.desassociarPrestador(this.getId(), idServico));
     }
 
     private void validarServicoDoPrestador(int idServico) {
@@ -126,12 +109,38 @@ public class Prestador extends Usuario {
 
     //consulta os serviços reais e seus preços no banco
     public List<ServicoDAO.ServicoPrestado> listarServicosCadastrados() {
+        return consultarNoBanco("Erro ao consultar serviços no banco.",
+                () -> servicoDAO.listarServicosPorPrestador(this.getId()));
+    }
+
+    // Operação no banco que devolve um valor. Existe porque a SQLException é checada
+    // e não pode ser lançada de dentro de uma lambda comum (Supplier, Function...).
+    @FunctionalInterface
+    private interface ConsultaNoBanco<T> {
+        T executar() throws SQLException;
+    }
+
+    // Operação no banco que não devolve nada.
+    @FunctionalInterface
+    private interface AcaoNoBanco {
+        void executar() throws SQLException;
+    }
+
+    // Regra única de erro de banco do Prestador: SQLException vira IllegalStateException
+    // com uma mensagem que diz o que estava sendo feito.
+    private <T> T consultarNoBanco(String mensagemDeErro, ConsultaNoBanco<T> consulta) {
         try {
-            return servicoDAO.listarServicosPorPrestador(this.getId());
+            return consulta.executar();
         } catch (SQLException e) {
-            throw new IllegalStateException(
-                    "Erro ao consultar serviços no banco.", e);
+            throw new IllegalStateException(mensagemDeErro, e);
         }
+    }
+
+    private void executarNoBanco(String mensagemDeErro, AcaoNoBanco acao) {
+        consultarNoBanco(mensagemDeErro, () -> {
+            acao.executar();
+            return null;
+        });
     }
 
     public Avaliacao avaliarContratante(Contratante contratante, int nota, String comentario) {
