@@ -159,28 +159,30 @@ A IA foi utilizada para auxiliar na compreensão da estrutura do código, no fun
 
 - **ChatGPT Plus:** utilizado como ferramenta de apoio para esclarecimento de dúvidas técnicas, compreensão da implementação, desenvolvimento de códigos, elaboração de testes e identificação de possíveis melhorias.
 - **Claude:** utilizado para tirar dúvidas sobre como funcionava alguns comandos, utilizado na criação de testes, e na criação de alguns trechos de códigos.
+- **Gemini:** utilizado para tirar dúvidas , guiar o desenvolvimento de CI/CD funcional entre os membros da equipe , ajuda na criação dos códigos de testes e códigos no geral.
 
 ### Histórico de utilização
 
 As conversas abaixo documentam algumas das interações realizadas durante o desenvolvimento do projeto, organizadas de acordo com sua finalidade.
 
 **1. Desenvolvimento e estrutura do código**
-- [01 - Descrição do assunto abordado](LINK_DA_CONVERSA)
+- [01 - Desenvolviemnto geral do código do projeto](https://share.gemini.google/VERUe7AkB8R0)
+- [01.5 - Desenvolviemnto geral do código do projeto](https://claude.ai/share/314dc797-9ab8-499e-9e3d-93a72ab4c886)
 - [02 - Descrição do assunto abordado](LINK_DA_CONVERSA)
 - [03 - Descrição do assunto abordado](LINK_DA_CONVERSA)
 
 **2. Compreensão de métodos, comandos e funcionalidades**
 - [Explicação de como funcionava o gerenciamento de dependencia](https://claude.ai/chat/cfe0fdcc-251d-45ed-a964-4e20e19fb261)
-- [02 - Descrição do assunto abordado](LINK_DA_CONVERSA)
+- [Explicação de como gerenciar o arquivo pom.xml](https://share.gemini.google/VERUe7AkB8R0,)
 - [03 - Descrição do assunto abordado](LINK_DA_CONVERSA)
 
 **3. Testes e validações**
 - [Criação de testes unitários](https://chatgpt.com/c/6aa36b2c-eac8-83e9-98fd-e1cea1b2e69c)
-- [02 - Descrição do assunto abordado](LINK_DA_CONVERSA)
+- [02 - Ajuda com criação dos testes : https://claude.ai/share/b9a843b8-790d-452b-91e8-426140799d19](LINK_DA_CONVERSA)
 
 **4. Correção de erros e resolução de dúvidas**
 - [Registro de estudo da Anna: dúvidas sobre o projeto tiradas com o Claude, de 17/10 a 13/11 (PDF)](https://drive.google.com/file/d/1bpaavvzRE4e_4XegEV3Vk19_LpPPy-7V/view?usp=sharing)
-- [01 - Descrição do assunto abordado](LINK_DA_CONVERSA)
+- [01 - Dúvidas de como implantar e manter Jenkins atualizado pra equipe ](https://claude.ai/share/b9a843b8-790d-452b-91e8-426140799d19)
 - [02 - Descrição do assunto abordado](LINK_DA_CONVERSA)
 
 **5. Apoio na criação do banco de dados**
