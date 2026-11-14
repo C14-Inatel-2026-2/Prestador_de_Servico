@@ -138,6 +138,30 @@ Nesta seção estão documentadas as melhorias realizadas no código.
 
 - **Link do PR:** [#80 - Refatorações no Prestador](https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/pull/80)
 
+### 6. Tratamento de erros centralizado no menu (`Menu`)
+
+> Cada opção do menu repetia o mesmo bloco de `try/catch`. O tratamento foi concentrado em um único método.
+
+- **Code Smell:** Código duplicado. Cada opção do menu repetia `try/catch` para `IllegalArgumentException`, `IllegalStateException` e `SQLException`, com mensagens diferentes em cada lugar.
+
+- **Refactoring aplicado:** Extract Method com interface funcional. Foi criado o método `executarAcao(Acao)`, que recebe a ação como parâmetro (interface funcional `Acao`, que aceita `throws SQLException`) e concentra o tratamento de erros em um só lugar.
+
+- **Por que essa alteração foi feita?:** A regra de tratamento de erros passou a existir em um só ponto. Alterar uma mensagem ou o comportamento após um erro não exige mexer em várias opções, e cada ação fica apenas com a sua lógica.
+
+- **Link do PR:** https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/commit/e941d1d03e7d4f19b353e49f97c7cb3fe6ee5c2b
+
+### 7. Separação do menu principal em métodos por perfil (`Menu`)
+
+> O método `executar()` concentrava o menu principal, o cadastro, o login e as opções de cada perfil em um único `switch`.
+
+- **Code Smell:** Método longo (Long Method) e responsabilidades misturadas. A navegação de cada perfil estava dentro do mesmo método que controlava o menu principal.
+
+- **Refactoring aplicado:** Extract Method. O fluxo foi separado em `menuCadastro()`, `menuContratante()` e `menuPrestador()`, cada um com seu próprio laço e sua opção de voltar.
+
+- **Por que essa alteração foi feita?:** Cada menu passa a ter uma responsabilidade clara. Para mudar as opções de um perfil, basta alterar o método correspondente, sem risco de afetar os outros.
+
+- **Link do PR:** https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/commit/e941d1d03e7d4f19b353e49f97c7cb3fe6ee5c2b
+
 
 ---
 
