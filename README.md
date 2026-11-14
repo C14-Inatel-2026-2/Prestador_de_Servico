@@ -83,3 +83,23 @@ Cada integrante participa da elaboração das histórias de usuário e da organi
 | Samuel Marques da Silva | @Samuelmarques7 |
 | Layla Victória Sousa Teles | Laylateles |
 | Giovanna de Lima Ribeiro | GiovannaLimaRibeiro |
+
+## Refatorações
+
+Registro das refatorações aplicadas ao código, com o mau cheiro identificado, a técnica usada, a motivação e o PR correspondente.
+
+### Refatoração 1: código duplicado no tratamento de erros
+
+- **Responsável:** Samuel Marques da Silva
+- **Smell:** Código duplicado. Cada opção do menu repetia blocos de `try/catch` para tratar `IllegalArgumentException`, `IllegalStateException` e `SQLException`, com mensagens diferentes em cada lugar.
+- **Refatoração aplicada:** Extract Method, com a criação do método `executarAcao(Acao)`, que recebe a ação como parâmetro (interface funcional `Acao`) e concentra o tratamento de erros em um único ponto.
+- **Por quê:** a regra de tratamento de erros passou a existir em um só lugar. Alterar uma mensagem ou o comportamento após um erro não exige mexer em várias opções, e cada ação fica apenas com a sua lógica.
+- **PR / Commit:** https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/commit/e941d1d03e7d4f19b353e49f97c7cb3fe6ee5c2b
+
+### Refatoração 2: método longo com responsabilidades misturadas
+
+- **Responsável:** Samuel Marques da Silva
+- **Smell:** Método longo (Long Method). O método `executar()` concentrava o menu principal, o cadastro, o login e as opções de cada perfil em um único `switch`, com a lógica de cada perfil misturada à navegação.
+- **Refatoração aplicada:** Extract Method, separando o fluxo em métodos próprios: `menuCadastro()`, `menuContratante()` e `menuPrestador()`, cada um com seu laço e sua opção de voltar.
+- **Por quê:** cada menu passa a ter uma responsabilidade clara. Para mudar as opções de um perfil, basta alterar o método correspondente, sem risco de afetar os outros.
+- **PR / Commit:** https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/commit/e941d1d03e7d4f19b353e49f97c7cb3fe6ee5c2b
