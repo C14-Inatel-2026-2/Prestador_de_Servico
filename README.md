@@ -148,7 +148,7 @@ Nesta seção estão documentadas as melhorias realizadas no código.
 
 - **Por que essa alteração foi feita?:** A regra de tratamento de erros passou a existir em um só ponto. Alterar uma mensagem ou o comportamento após um erro não exige mexer em várias opções, e cada ação fica apenas com a sua lógica.
 
-- **Link do PR:** https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/commit/e941d1d03e7d4f19b353e49f97c7cb3fe6ee5c2b
+- - **Link do PR:** [Commit e941d1d - Refatorações do menu](https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/commit/e941d1d03e7d4f19b353e49f97c7cb3fe6ee5c2b)
 
 ### 7. Separação do menu principal em métodos por perfil (`Menu`)
 
@@ -160,7 +160,7 @@ Nesta seção estão documentadas as melhorias realizadas no código.
 
 - **Por que essa alteração foi feita?:** Cada menu passa a ter uma responsabilidade clara. Para mudar as opções de um perfil, basta alterar o método correspondente, sem risco de afetar os outros.
 
-- **Link do PR:** https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/commit/e941d1d03e7d4f19b353e49f97c7cb3fe6ee5c2b
+- - **Link do PR:** [Commit e941d1d - Refatorações do menu](https://github.com/C14-Inatel-2026-2/Prestador_de_Servico/commit/e941d1d03e7d4f19b353e49f97c7cb3fe6ee5c2b)
 
 
 ---
